@@ -57,9 +57,17 @@ for iP in range(20):
     dt = mus.midi.DeltaTime(mt1, time=24)
     mt1.events.append(dt)
 
-eot = mus.midi.MetaEvents.END_OF_TRACK
-# mt0.events.append(eot)
-# mt1.events.append(eot)
+eot0 = mus.midi.MidiEvent()
+eot0.type = mus.midi.MetaEvents.END_OF_TRACK
+eot0.channel = 1
+eot0.data = ''
+mt0.events.append(eot0)
+
+eot1 = mus.midi.MidiEvent()
+eot1.type = mus.midi.MetaEvents.END_OF_TRACK
+eot1.channel = 1
+eot1.data = ''
+mt1.events.append(eot1)
 
 mf.tracks.append(mt0)
 mf.tracks.append(mt1)
