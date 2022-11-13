@@ -28,7 +28,11 @@ beats_per_measure = 4
 measures = 16
 num_beats = measures * beats_per_measure
 
-mode = [0, 1, 4, 6, 7, 9, 10]
+#mode = [0, 1, 4, 6, 7, 9, 10] # crazy septatonic mode
+#mode = [0,1,4,5,7,8,10,11] # some octatonic scale
+mode = [0,2,3,5,7,9,11] # minor scale
+#mode = [0,2,4,5,7,9,11] # major scale
+
 seq1 = np.random.randint(1, 24, num_beats)
 seq2 = np.array(list(fib(measures * beats_per_measure)))
 vel_seq = np.random.randint(40, 80, num_beats)
@@ -165,7 +169,7 @@ def algorithm4(num_beats, modeList: list = [0,2,4,5,7,9,11]):
         for iT in range(nT - 1):
             durationT = (seq3[(i + iT) % num_beats]%6)**2 * 256
             pitchCtpt = pitch + np.round(seq3[i] * 1.2)%24
-            pitchCtpt = pitchCtpt + mode_arr[(iT + seq3[i]) % ms]
+            pitchCtpt = pitchCtpt + mode_arr[(iT * seq3[i]) % ms]
             pitchCtpt = int(pitchCtpt/12)*12 + mode_arr[np.argsort(abs(np.mod(pitchCtpt, 12) - mode_arr))[0]] # forcing the pitchCtpt to be n*12 + any(mode)
             pitchCtpt = int(pitchCtpt)
             
@@ -176,9 +180,7 @@ def algorithm4(num_beats, modeList: list = [0,2,4,5,7,9,11]):
 
 algToUse = algorithm4
 
-modeList = [0,1,4,5,7,8,10,11]
-
-data, dataCtpt = algToUse(num_beats, modeList=modeList)
+data, dataCtpt = algToUse(num_beats, modeList=mode)
 populate_midi_track_from_data(mts[0], data)
 for iT in range(nT - 1):
     populate_midi_track_from_data(mts[iT + 1], dataCtpt[iT])
