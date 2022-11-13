@@ -17,7 +17,7 @@ def fib(n):
         yield a
         a, b = b, a + b
 
-nT = 5
+nT = 4
 mts = []
 for iT in range(nT):
     mts.append(midi.MidiTrack(iT))
@@ -32,6 +32,8 @@ num_beats = measures * beats_per_measure
 #mode = [0,1,4,5,7,8,10,11] # some octatonic scale
 mode = [0,2,3,5,7,9,11] # minor scale
 #mode = [0,2,4,5,7,9,11] # major scale
+#mode = [0,3,7] # minor triad
+#mode = [0,4,7] # major triad
 
 seq1 = np.random.randint(1, 24, num_beats)
 seq2 = np.array(list(fib(measures * beats_per_measure)))
@@ -178,8 +180,66 @@ def algorithm4(num_beats, modeList: list = [0,2,4,5,7,9,11]):
             
     return data, dataCtpt
 
-algToUse = algorithm4
+def algorithm5(num_beats, modeList: list = [0,2,4,5,7,9,11]):
+    # duration, pitch, velocity
+    data = [] # one start note
+    dataCtpt = [] # data counterpoint
+    ms = len(modeList)
+    mode_arr = np.array(modeList)
+    for i in range(1, num_beats):
+        # pick random pitch and velocity for 8th note
+        duration = (seq3[i]%2 + 1)*2 * 512
+        pitch = 24 + 12*np.round(seq3[i] * 1.2)%5 + modeList[seq3[i] % ms] # octave + mode position in octave
+        pitch = pitch + seq3[int(i/20)] % 8 * 5 # key changes
+        pitch = int(pitch)
+        velocity = vel_seq[i]
+    
+        data.append([duration, pitch, velocity])
+        
+        for iT in range(nT - 1):
+            durationT = (seq3[(i + iT) % num_beats]%2 + 1)*2 * 256
+            pitchCtpt = pitch + np.round(seq3[i] * 1.2)%24
+            pitchCtpt = pitchCtpt + mode_arr[(4 + iT + seq3[i]) % ms]
+            pitchCtpt = int(pitchCtpt/12)*12 + mode_arr[np.argsort(abs(np.mod(pitchCtpt, 12) - mode_arr))[0]] # forcing the pitchCtpt to be n*12 + any(mode)
+            pitchCtpt = int(pitchCtpt)
+            
+            dataCtpt.append([])
+            dataCtpt[iT].append([durationT, pitchCtpt, velocity])
+            
+    return data, dataCtpt
 
+def algorithm6(num_beats, modeList: list = [0,2,4,5,7,9,11]):
+    # duration, pitch, velocity
+    data = [] # one start note
+    dataCtpt = [] # data counterpoint
+    ms = len(modeList)
+    mode_arr = np.array(modeList)
+    for i in range(1, num_beats):
+        # pick random pitch and velocity for 8th note
+        duration = (seq3[i]%2 + 1)*2 * 256
+        pitch = 24 + 12*np.round(seq3[i] * 1.2)%5 + modeList[seq3[i] % ms] # octave + mode position in octave
+        pitch = pitch + seq3[int(i/20)] % 8 * 5 # key changes
+        pitch = int(pitch)
+        velocity = vel_seq[i]
+    
+        data.append([duration, pitch, velocity])
+        
+        for iT in range(nT - 1):
+            durationT = (seq3[(i + iT) % num_beats]%2 + 1)*2 * 256
+            pitchCtpt = int(pitch/12)*12 + 24 # + np.round(seq3[i] * 1.2)%24
+            pitchCtpt = pitchCtpt + mode_arr[(4 + 2*iT + seq3[i]) % ms]
+            pitchCtpt = int(pitchCtpt/12)*12 + mode_arr[np.argsort(abs(np.mod(pitchCtpt, 12) - mode_arr))[0]] # forcing the pitchCtpt to be n*12 + any(mode)
+            pitchCtpt = int(pitchCtpt)
+            
+            dataCtpt.append([])
+            dataCtpt[iT].append([durationT, pitchCtpt, velocity])
+            
+    return data, dataCtpt
+
+# algorithm to use, change here:
+algToUse = algorithm6
+
+# calling algorithm (don't change here, change above)
 data, dataCtpt = algToUse(num_beats, modeList=mode)
 populate_midi_track_from_data(mts[0], data)
 for iT in range(nT - 1):
@@ -201,6 +261,8 @@ mf.write()
 mf.close()
 
 # saving state to reproduce
+import inspect
+
 with open(temp_filename + '_config_used.txt', 'w') as out_txt_file:
     out_txt_file.write('key\tvalue\n')
     for key in dir():
@@ -214,6 +276,9 @@ with open(temp_filename + '_config_used.txt', 'w') as out_txt_file:
                 # __builtins__, my_shelf, and imported modules can not be shelved.
                 #
                 print('ERROR saving: {0}'.format(key))
+    lines = inspect.getsource(algToUse) # getting source code from algorithm being used
+    out_txt_file.write('Code from ' + algToUse.__name__ + ':\n')
+    out_txt_file.write(lines)
     # out_txt_file.write(algToUse.__name__)
     # out_txt_file.write('seq1 = ' + str(seq1))
     # out_txt_file.write('seq2 = ' + str(seq2))
