@@ -124,20 +124,20 @@ if updDf == True:
     
     df.to_csv(csv_path)
 
-# # Plotting graph
-# if df.shape[0] > 1:
-#     dts = list(map(datetime.datetime.fromisoformat, df.time))
-#     dts = np.array(dts)
-#     rates = df.rate
-#     plt.plot(dts, rates)
-#     plt.subplots_adjust(bottom=0.2)
-#     plt.xticks(rotation=25)
-#     xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
-#     ax=plt.gca()
-#     ax.xaxis.set_major_formatter(xfmt)
+# Plotting graph
+if df.shape[0] > 1:
+    dts = list(map(datetime.datetime.fromisoformat, df.time))
+    dts = np.array(dts)
+    total_price = df.sum(axis=1)
+    plt.plot(dts, total_price)
+    plt.subplots_adjust(bottom=0.2)
+    plt.xticks(rotation=25)
+    xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
+    ax=plt.gca()
+    ax.xaxis.set_major_formatter(xfmt)
 
-#     plt.grid(True, which='major', color=(0.8, 0.8, 0.8), alpha=0.5)
-#     plt.grid(True, which='minor', color=(0.8, 0.8, 0.8), alpha=0.1)
-#     plt.minorticks_on()
-#     plt.xlabel("Date and time")
-#     plt.ylabel("Brl / Eur")
+    plt.grid(True, which='major', color=(0.8, 0.8, 0.8), alpha=0.5)
+    plt.grid(True, which='minor', color=(0.8, 0.8, 0.8), alpha=0.1)
+    plt.minorticks_on()
+    plt.xlabel("Date and time")
+    plt.ylabel("Brl / Eur")

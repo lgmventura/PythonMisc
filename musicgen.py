@@ -8,6 +8,8 @@ Created on Thu Dec  2 23:33:28 2021
 import numpy as np
 from music21 import midi, note, chord, environment
 from midigenlib import populate_midi_track_from_data
+from datetime import datetime as dtm
+from os import path
 
 def fib(n):
     a, b = 0, 1
@@ -27,8 +29,9 @@ measures = 16
 num_beats = measures * beats_per_measure
 
 mode = [0, 1, 4, 6, 7, 9, 10]
-seq1 = np.random.randint(1, 24, measures * beats_per_measure)
+seq1 = np.random.randint(1, 24, num_beats)
 seq2 = np.array(list(fib(measures * beats_per_measure)))
+vel_seq = np.random.randint(40, 80, num_beats)
 
 # note array is ordered [duration, pitch, velocity]
 def algorithm1(num_beats):
@@ -39,7 +42,7 @@ def algorithm1(num_beats):
         # pick random pitch and velocity for 8th note
         duration = np.random.randint(1,7) * 128
         pitch = np.random.randint(36, 60)
-        velocity = np.random.randint(60, 80)
+        velocity = vel_seq[i]
     
         data.append([duration, pitch, velocity])
         
@@ -73,7 +76,7 @@ def algorithm2(num_beats, modeList: list = [0,2,4,5,7,9,11]):
         # pick random pitch and velocity for 8th note
         duration = np.random.randint(1,7)**2 * 128
         pitch = 24 + 12*np.random.randint(0, 4) + modeList[np.random.randint(0, ms)]
-        velocity = np.random.randint(60, 80)
+        velocity = vel_seq[i]
     
         data.append([duration, pitch, velocity])
         
@@ -112,7 +115,7 @@ def algorithm3(num_beats, modeList: list = [0,2,4,5,7,9,11]):
         # pick random pitch and velocity for 8th note
         duration = (seq2[i]%7)**2 * 128
         pitch = 24 + 12*np.round(seq2[i] * 1.2)%4 + modeList[np.random.randint(0, ms)]
-        velocity = np.random.randint(60, 80)
+        velocity = vel_seq[i]
     
         data.append([duration, pitch, velocity])
         
@@ -141,7 +144,41 @@ def algorithm3(num_beats, modeList: list = [0,2,4,5,7,9,11]):
             
     return data, dataCtpt
 
-data, dataCtpt = algorithm2(num_beats, modeList=[0,1,4,5,7,8,10,11])
+seq3 = seq1[seq2%10]
+seq4 = seq3[seq2%10]
+def algorithm4(num_beats, modeList: list = [0,2,4,5,7,9,11]):
+    # duration, pitch, velocity
+    data = [] # one start note
+    dataCtpt = [] # data counterpoint
+    ms = len(modeList)
+    mode_arr = np.array(modeList)
+    for i in range(1, num_beats):
+        # pick random pitch and velocity for 8th note
+        duration = (seq3[i]%6)**2 * 256
+        pitch = 24 + 12*np.round(seq3[i] * 1.2)%5 + modeList[seq3[i] % ms] # octave + mode position in octave
+        pitch = pitch + round(i/10) * 5 # key changes
+        pitch = int(pitch)
+        velocity = vel_seq[i]
+    
+        data.append([duration, pitch, velocity])
+        
+        for iT in range(nT - 1):
+            durationT = (seq3[(i + iT) % num_beats]%6)**2 * 256
+            pitchCtpt = pitch + np.round(seq3[i] * 1.2)%24
+            pitchCtpt = pitchCtpt + mode_arr[(iT + seq3[i]) % ms]
+            pitchCtpt = int(pitchCtpt/12)*12 + mode_arr[np.argsort(abs(np.mod(pitchCtpt, 12) - mode_arr))[0]] # forcing the pitchCtpt to be n*12 + any(mode)
+            pitchCtpt = int(pitchCtpt)
+            
+            dataCtpt.append([])
+            dataCtpt[iT].append([durationT, pitchCtpt, velocity])
+            
+    return data, dataCtpt
+
+algToUse = algorithm4
+
+modeList = [0,1,4,5,7,8,10,11]
+
+data, dataCtpt = algToUse(num_beats, modeList=modeList)
 populate_midi_track_from_data(mts[0], data)
 for iT in range(nT - 1):
     populate_midi_track_from_data(mts[iT + 1], dataCtpt[iT])
@@ -151,9 +188,47 @@ mf = midi.MidiFile()
 for mt in mts:
     mf.tracks.append(mt)
 
-env = environment.Environment()
-temp_filename = env.getTempFile('.mid')
+# env = environment.Environment()
+# temp_filename = env.getTempFile('.mid')
+outPath = '/media/luiz/Volume/Dokumente/Musik/Projekte/Kompon/Algoritmos'
+temp_filename = dtm.isoformat(dtm.now()).replace(':', '')[:17]
+temp_filename = path.join(outPath, temp_filename + '.mid')
 print("Saving file to: %s" % temp_filename)
 mf.open(temp_filename, 'wb')
 mf.write()
 mf.close()
+
+# saving state to reproduce
+with open(temp_filename + '_config_used.txt', 'w') as out_txt_file:
+    out_txt_file.write('key\tvalue\n')
+    for key in dir():
+        if key[0] != '_' and key not in ['exit', 'environment',
+                                         'export_variables', 'key', 'In',
+                                         'my_shelf', 'Out', 'quit', 'shelve']:
+            try:
+                out_txt_file.write(key + '\t' + str(globals()[key]) + '\n')
+            except:
+                #
+                # __builtins__, my_shelf, and imported modules can not be shelved.
+                #
+                print('ERROR saving: {0}'.format(key))
+    # out_txt_file.write(algToUse.__name__)
+    # out_txt_file.write('seq1 = ' + str(seq1))
+    # out_txt_file.write('seq2 = ' + str(seq2))
+    # out_txt_file.write('seq3 = ' + str(seq3))
+
+
+# import shelve
+
+# my_shelf = shelve.open(temp_filename + '.txt', 'n') # 'n' for new
+
+# for key in dir():
+#     if key[0] != '_':# and key not in ['exit', 'environment', 'export_variables', 'key', 'my_shelf', 'quit', 'shelve']:
+#         try:
+#             my_shelf[key] = globals()[key]
+#         except:
+#             #
+#             # __builtins__, my_shelf, and imported modules can not be shelved.
+#             #
+#             print('ERROR shelving: {0}'.format(key))
+# my_shelf.close()
