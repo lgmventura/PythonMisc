@@ -10,7 +10,12 @@ files = [f for f in listdir(mypath) if isfile(join(mypath, f))]
 files.sort()
 
 screen_w = 1920 # the half, because we are displaying two pages per view
-screen_h = 2160
+screen_h = 1080
+
+two_pages_per_view = False
+
+if two_pages_per_view:
+    screen_w = screen_w / 2
 
 dur = 1000
 
@@ -24,10 +29,13 @@ for idx, file in enumerate(files):
 
     strip.frame_final_end = (idx+1)*dur-1
     #strip.use_translation = True
-    if idx % 2 == 0: # to put even pages on the left
-        strip.transform.offset_x = -screen_w/2#screen_w/2 - width/2
-    else: # and uneven pages on the right
-        strip.transform.offset_x = +screen_w/2
+    if two_pages_per_view == True:
+        if idx % 2 == 0: # to put even pages on the left
+            strip.transform.offset_x = -screen_w/2#screen_w/2 - width/2
+        else: # and uneven pages on the right
+            strip.transform.offset_x = +screen_w/2
+    else:
+        strip.transform.offset_x = 0
     strip.transform.offset_y = 0#screen_h/2 - height/2
     strip.blend_type = 'ALPHA_OVER'
 

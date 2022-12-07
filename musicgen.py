@@ -17,7 +17,7 @@ def fib(n):
         yield a
         a, b = b, a + b
 
-nT = 4
+nT = 5
 mts = []
 for iT in range(nT):
     mts.append(midi.MidiTrack(iT))
@@ -34,6 +34,7 @@ mode = [0,2,3,5,7,9,11] # minor scale
 #mode = [0,2,4,5,7,9,11] # major scale
 #mode = [0,3,7] # minor triad
 #mode = [0,4,7] # major triad
+#mode = [0] # monote
 
 seq1 = np.random.randint(1, 24, num_beats)
 seq2 = np.array(list(fib(measures * beats_per_measure)))
@@ -188,7 +189,7 @@ def algorithm5(num_beats, modeList: list = [0,2,4,5,7,9,11]):
     mode_arr = np.array(modeList)
     for i in range(1, num_beats):
         # pick random pitch and velocity for 8th note
-        duration = (seq3[i]%2 + 1)*2 * 512
+        duration = (seq3[i]%2 + 1)*2 * 256
         pitch = 24 + 12*np.round(seq3[i] * 1.2)%5 + modeList[seq3[i] % ms] # octave + mode position in octave
         pitch = pitch + seq3[int(i/20)] % 8 * 5 # key changes
         pitch = int(pitch)
@@ -216,19 +217,23 @@ def algorithm6(num_beats, modeList: list = [0,2,4,5,7,9,11]):
     mode_arr = np.array(modeList)
     for i in range(1, num_beats):
         # pick random pitch and velocity for 8th note
-        duration = (seq3[i]%2 + 1)*2 * 256
-        pitch = 24 + 12*np.round(seq3[i] * 1.2)%5 + modeList[seq3[i] % ms] # octave + mode position in octave
-        pitch = pitch + seq3[int(i/20)] % 8 * 5 # key changes
+        duration = (seq3[i]%5 + 1)*2 * 128
+        base_octave = 24 + round(seq3[i]/12)*12
+        pitch = base_octave + mode_arr[seq3[i] % ms] # octave + mode position in octave
+        key_base = seq3[int(i/10)] % 5 * 5 # key changes
+        pitch = pitch + key_base
         pitch = int(pitch)
         velocity = vel_seq[i]
     
-        data.append([duration, pitch, velocity])
+        data.append((duration, pitch, velocity))
         
         for iT in range(nT - 1):
-            durationT = (seq3[(i + iT) % num_beats]%2 + 1)*2 * 256
-            pitchCtpt = int(pitch/12)*12 + 24 # + np.round(seq3[i] * 1.2)%24
-            pitchCtpt = pitchCtpt + mode_arr[(4 + 2*iT + seq3[i]) % ms]
-            pitchCtpt = int(pitchCtpt/12)*12 + mode_arr[np.argsort(abs(np.mod(pitchCtpt, 12) - mode_arr))[0]] # forcing the pitchCtpt to be n*12 + any(mode)
+            durationT = (seq3[(i + 10 + 3*iT) % num_beats]%8 + 1)*2 * 64
+            # if seq3[(i + 10 + 3*iT) % num_beats] > 20:
+            #     durationT = durationT + int(256/3)
+            pitchCtpt = base_octave + 24 + key_base # + np.round(seq3[i] * 1.2)%24 # counterpoint two octaves higher
+            pitchCtpt = pitchCtpt + mode_arr[(4 + 2*iT + seq3[num_beats - i]) % ms]
+            # pitchCtpt = int(pitchCtpt/12)*12 + mode_arr[np.argsort(abs(np.mod(pitchCtpt, 12) - mode_arr))[0]] # forcing the pitchCtpt to be n*12 + any(mode)
             pitchCtpt = int(pitchCtpt)
             
             dataCtpt.append([])
