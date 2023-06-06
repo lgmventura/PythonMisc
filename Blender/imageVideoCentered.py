@@ -3,21 +3,34 @@ from PIL import Image
 from os import listdir
 from os.path import isfile, join
 
-mypath = "/media/luiz/Volume/Dokumente/Musik/Projekte/Kompon/temp/trim"
+mypath = "/home/luiz/Music/temp/trim/"
 
 files = [f for f in listdir(mypath) if isfile(join(mypath, f))]
 
-files.sort()
+import re
 
-screen_w = 1920 # the half, because we are displaying two pages per view
-screen_h = 1080
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+def natural_keys(text):
+    '''
+    alist.sort(key=natural_keys) sorts in human order
+    http://nedbatchelder.com/blog/200712/human_sorting.html
+    (See Toothy's implementation in the comments)
+    '''
+    return [ atoi(c) for c in re.split(r'(\d+)', text) ]
+
+files.sort(key=natural_keys)
+
+screen_w = 3840 # the half, because we are displaying two pages per view
+screen_h = 2160
 
 two_pages_per_view = False
 
 if two_pages_per_view:
     screen_w = screen_w / 2
 
-dur = 1000
+dur = 500
 
 seq = bpy.context.scene.sequence_editor_create()
 
