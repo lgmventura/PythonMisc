@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import webbrowser
 
 import exif
+import ffmpeg
 from datetime import datetime
 
 import os
@@ -55,6 +56,25 @@ for file in sorted(os.listdir(photos_dir)):
             
             gps_lat_dd = dms_to_dd(*gps_lat_dms) * (1 if gps_lat_ref == 'N' else -1)
             gps_lon_dd = dms_to_dd(*gps_lon_dms) * (1 if gps_lon_ref == 'E' else -1)
+            
+            if dtime > datetime(2023, 9, 23, 12, 00, 00) and \
+                dtime < datetime(2023, 10, 8, 8, 00, 00):
+                folium.Marker(
+                  location=[gps_lat_dd, gps_lon_dd],
+                  popup=dtime.strftime("%Y-%m-%d %H:%M:%S"),
+                  ).add_to(mp)
+                all_coords.append([gps_lat_dd, gps_lon_dd])
+    
+    if file.endswith('.mp4'):
+        full_path = os.path.join(photos_dir, file)
+        tags = ffmpeg.probe(full_path)['format']['tags']
+        dtime_iso_str = tags['creation_time'][:-4] # offset naïve: improve this!
+        dtime = datetime.fromisoformat(dtime_iso_str)
+        
+        if 'location' in tags.keys():
+            location_str = tags['location']
+            gps_lat_dd = float(location_str[:8])
+            gps_lon_dd = float(location_str[8:-1])
             
             if dtime > datetime(2023, 9, 23, 12, 00, 00) and \
                 dtime < datetime(2023, 10, 8, 8, 00, 00):
