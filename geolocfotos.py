@@ -30,9 +30,10 @@ def dms_to_dd(d, m, s):
     return dd
 
 
-mp = folium.Map(location=[64.98, -18.61], tiles="CartoDB Positron", zoom_start=7)
+mp = folium.Map(location=[64.98, -18.61], tiles='OpenStreetMap', zoom_start=7)# tiles="CartoDB Positron", zoom_start=7)
+all_coords = []
 
-for file in os.listdir(photos_dir):
+for file in sorted(os.listdir(photos_dir)):
     if file.endswith('.jpg'):
         full_path = os.path.join(photos_dir, file)
         f_exif = exif.Image(full_path)
@@ -55,13 +56,15 @@ for file in os.listdir(photos_dir):
             gps_lat_dd = dms_to_dd(*gps_lat_dms) * (1 if gps_lat_ref == 'N' else -1)
             gps_lon_dd = dms_to_dd(*gps_lon_dms) * (1 if gps_lon_ref == 'E' else -1)
             
-            if dtime > datetime(2023, 9, 23, 12, 00, 00):
+            if dtime > datetime(2023, 9, 23, 12, 00, 00) and \
+                dtime < datetime(2023, 10, 8, 8, 00, 00):
                 folium.Marker(
                   location=[gps_lat_dd, gps_lon_dd],
                   popup=dtime.strftime("%Y-%m-%d %H:%M:%S"),
                   ).add_to(mp)
+                all_coords.append([gps_lat_dd, gps_lon_dd])
 
-
+folium.PolyLine(all_coords).add_to(mp)
 
 mp.save("map.html")
 
