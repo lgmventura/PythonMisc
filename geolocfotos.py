@@ -30,6 +30,7 @@ def dms_to_dd(d, m, s):
     dd = d + float(m)/60 + float(s)/3600
     return dd
 
+data = pd.DataFrame()
 
 mp = folium.Map(location=[64.98, -18.61], tiles='OpenStreetMap', zoom_start=7)# tiles="CartoDB Positron", zoom_start=7)
 all_coords = []
@@ -61,9 +62,15 @@ for file in sorted(os.listdir(photos_dir)):
                 dtime < datetime(2023, 10, 8, 8, 00, 00):
                 folium.Marker(
                   location=[gps_lat_dd, gps_lon_dd],
-                  popup=dtime.strftime("%Y-%m-%d %H:%M:%S"),
+                  popup=file + dtime.strftime("%Y-%m-%d %H:%M:%S"),
                   ).add_to(mp)
-                all_coords.append([gps_lat_dd, gps_lon_dd])
+                
+                iData = {'file': file[:-4],
+                         'extension': file[-4:],
+                         'datetime': dtime,
+                         'gps_lat': gps_lat_dd,
+                         'gps_lon': gps_lon_dd}
+                data = pd.concat([data, pd.DataFrame(iData, index=[0])], ignore_index=True)
     
     if file.endswith('.mp4'):
         full_path = os.path.join(photos_dir, file)
@@ -80,9 +87,21 @@ for file in sorted(os.listdir(photos_dir)):
                 dtime < datetime(2023, 10, 8, 8, 00, 00):
                 folium.Marker(
                   location=[gps_lat_dd, gps_lon_dd],
-                  popup=dtime.strftime("%Y-%m-%d %H:%M:%S"),
+                  popup=file + dtime.strftime("%Y-%m-%d %H:%M:%S"),
                   ).add_to(mp)
-                all_coords.append([gps_lat_dd, gps_lon_dd])
+                
+                iData = {'file': file[:-4],
+                         'extension': file[-4:],
+                         'datetime': dtime,
+                         'gps_lat': gps_lat_dd,
+                         'gps_lon': gps_lon_dd}
+                data = pd.concat([data, pd.DataFrame(iData, index=[0])], ignore_index=True)
+
+data = data.sort_values('datetime')
+
+
+for index, row in data.iterrows():
+    all_coords.append([row['gps_lat'], row['gps_lon']])
 
 folium.PolyLine(all_coords).add_to(mp)
 
