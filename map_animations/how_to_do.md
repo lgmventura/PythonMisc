@@ -43,4 +43,14 @@ To save the frames as images, pupperteer is needed. This can be installed (from 
 
 Basically, everything that is needed for the project has to be installed inside the project.
 
+(disclaimer: Sorry if this or anything is too obvious for you, I'm a totally javascript/node/nvm/npm newbie.)
+
+When the animation is ready to be rendered, run:
+```
+node captureMapFrames.js
+```
+with the server open.
+
+Unfortunately, the current approach is not sync on capturing the frames. So don't expect the resulting animation to playback the same speed as the original.
+
 

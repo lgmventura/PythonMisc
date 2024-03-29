@@ -1,3 +1,5 @@
+// Adapted from: https://openlayers.org/en/latest/examples/animation.html
+
 import './style.css';
 import {Map, View} from 'ol';
 import TileLayer from 'ol/layer/Tile';
@@ -10,11 +12,15 @@ import OSM from 'ol/source/OSM';
 import {easeIn, easeOut} from 'ol/easing.js';
 import {fromLonLat} from 'ol/proj.js';
 
+const mark0 = fromLonLat([0, 0]);
+
 const london = fromLonLat([-0.12755, 51.507222]);
 const moscow = fromLonLat([37.6178, 55.7517]);
 const istanbul = fromLonLat([28.9744, 41.0128]);
 const rome = fromLonLat([12.5, 41.9]);
 const bern = fromLonLat([7.4458, 46.95]);
+
+const iceland = fromLonLat([64.98, -18.61]);
 
 const view = new View({
   center: istanbul,
@@ -46,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
     view.animate({
         center: london,
-        duration: 3000,
+        duration: 6000,
     });
     }
     
@@ -54,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Code to execute after the delay
     pan_to_london();
     console.log('Delayed code executed!');
-    }, 1000);
+    }, 2000);
     
 });
 

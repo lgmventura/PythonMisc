@@ -17,8 +17,8 @@ async function captureMapFrames() {
     await page.waitForSelector('.ol-layer');
 
     // Capture frames at regular intervals with a delay between each frame
-    const delay = 20; // Delay in milliseconds (adjust as needed)
-    const numFrames = 30; // Total number of frames to capture
+    //const delay = 20; // Delay in milliseconds (adjust as needed)
+    const numFrames = 60; // Total number of frames to capture
     for (let i = 0; i < numFrames; i++) {
         // Capture screenshot
         await page.screenshot({ path: `frames/frame_${i}.png` });
