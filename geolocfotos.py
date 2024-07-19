@@ -20,7 +20,19 @@ from datetime import datetime
 
 import os
 
-photos_dir = '/media/luiz/HDp1/Celular/MiNote10/20231010'
+import numpy as np
+
+# croácia 2013 (infelizmente, quase nenhum dado de GPS)
+#photos_dir = '/media/luiz/Elements/FotosEtVideos/Nexus4/2013-10-22/Camera'
+
+# islândia 2023
+photos_dir1 = '/media/luiz/HDp1/Celular/MiNote10/20231010'
+photos_dir2 = '/media/luiz/HDp1/Câmeras de outrem/Islândia 2023/Louise'
+photos_dir3 = '/media/luiz/HDp1/Câmeras de outrem/Islândia 2023/Pedro'
+
+photos_dirs = [photos_dir1,
+               photos_dir2,
+               photos_dir3]
 
 # world = geopandas.read_file(geodatasets.get_path("naturalearth.land"))
 
@@ -35,12 +47,31 @@ data = pd.DataFrame()
 mp = folium.Map(location=[64.98, -18.61], tiles='OpenStreetMap', zoom_start=7.2)# tiles="CartoDB Positron", zoom_start=7)
 all_coords = []
 
-dtime_min = datetime(2023, 9, 23, 12, 00, 00)
-dtime_max = datetime(2023, 9, 24, 12, 00, 00)#(2023, 10, 8, 8, 00, 00)
+# croácia 2013
+# dtime_min = datetime(2013, 10, 1, 16, 00, 00)
+# dtime_max = datetime(2013, 10, 7, 15, 00, 00)
 
-for file in sorted(os.listdir(photos_dir)):
+# islândia 2023
+# dtime_min = datetime(2023, 9, 23, 12, 00, 00)
+# dtime_max = datetime(2023, 9, 24, 12, 00, 00)#(2023, 10, 8, 8, 00, 00)
+dtime_min = datetime(2023, 9, 23, 12, 00, 00)
+dtime_max = datetime(2023, 10, 9, 2, 00, 00)
+
+files = []
+file_paths = []
+for photo_dir in photos_dirs:
+    fs = os.listdir(photo_dir)
+    files = files + fs
+    fps = [os.path.join(photo_dir, f) for f in fs]
+    file_paths = file_paths + fps
+arg_sort = np.argsort(files)
+files_sorted = np.array(files)[arg_sort]
+file_paths_sorted = np.array(file_paths)[arg_sort]
+
+for idxFile, file in enumerate(files_sorted):
     if file.endswith('.jpg'):
-        full_path = os.path.join(photos_dir, file)
+        full_path = file_paths_sorted[idxFile] # os.path.join(photos_dir, file)
+        full_path = str(full_path)
         f_exif = exif.Image(full_path)
         if f_exif.has_exif is False:
             continue
@@ -76,7 +107,8 @@ for file in sorted(os.listdir(photos_dir)):
                 data = pd.concat([data, pd.DataFrame(iData, index=[0])], ignore_index=True)
     
     if file.endswith('.mp4'):
-        full_path = os.path.join(photos_dir, file)
+        full_path = file_paths_sorted[idxFile] # os.path.join(photos_dir, file)
+        full_path = str(full_path)
         tags = ffmpeg.probe(full_path)['format']['tags']
         dtime_iso_str = tags['creation_time'][:-4] # offset naïve: improve this!
         dtime = datetime.fromisoformat(dtime_iso_str)

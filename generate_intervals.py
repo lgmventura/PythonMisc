@@ -11,6 +11,8 @@ from scipy.io import wavfile as wf
 
 from all_fractions import A038566 # generator of numerators
 
+from os import path
+
 samplerate = 44100; fs = 100
 
 t_per_note = 0.1
@@ -18,6 +20,7 @@ t = np.linspace(0., t_per_note, int(samplerate*t_per_note))
 
 amplitude = int(np.iinfo(np.int16).max / 10)
 
+outpath = '/home/luiz/Music/Algoritmos/'
 
 def genIntervals():
     wavdata = np.array([])
@@ -31,6 +34,6 @@ def genIntervals():
             idata = data_n + data_d
             wavdata = np.append(wavdata, idata)
             
-    wf.write("intervals.wav", samplerate, wavdata.astype(np.int16))
+    wf.write(path.join(outpath, "intervals.wav"), samplerate, wavdata.astype(np.int16))
             
 genIntervals()

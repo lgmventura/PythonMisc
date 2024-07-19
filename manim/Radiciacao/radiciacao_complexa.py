@@ -20,24 +20,32 @@ def calc_raízes(radicando: complex, índice=2):
         
     return raízes
 
-class ComplexPlane(mn.Scene):
-    def construct(self, points):
+radicando = 8
+índice = 5
+
+class CenaRaízes(mn.Scene):
+    def construct(self): #, radicando, índice):
         plane = mn.ComplexPlane().add_coordinates()
         
+        t = mn.MathTex(r'\sqrt['  + str(índice) + r']{' + str(radicando) + '}')
+        points = calc_raízes(radicando, índice)
+        self.play(mn.Create(t))
+        self.wait()
         self.play(mn.Create(plane))
         self.add(plane)
+
+        points_real = []
+        for point in points:
+            points_real.append([point.real, point.imag, 0])
+        polyg = mn.Polygon(*points_real)
+        
+        self.play(mn.Transform(t, polyg))
         for point in points:
             d = mn.Dot(plane.n2p(point), color=mn.YELLOW)
             lb = mn.MathTex("{:.2f}".format(point)).next_to(d, mn.UR, 0.1)
-            # self.add(
-            #     d,
-            #     lb,
-            #     )
-            self.play(mn.Create(d))
-            self.add(lb)
+            self.play(mn.Create(d), mn.Create(lb))
         self.wait()
 
-points = calc_raízes(8, 3)
 
-cp = ComplexPlane()
-cp.construct(points)
+cp = CenaRaízes()
+cp.construct()
