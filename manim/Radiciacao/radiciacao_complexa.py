@@ -65,28 +65,31 @@ class CenaRaízes(mn.MovingCameraScene):
             ]
         self.play(mn.AnimationGroup(*fade_out, lag_ratio=0.1))
         
-        self.play(*[dot.animate.fade(0.8) for dot in ds])
+        self.play(*[dot.animate.fade(0.6) for dot in ds])
         
         self.play(self.camera.frame.animate.scale(zoom_factor))
         
         for point_exp in points_exponent:
-            d2 = mn.Dot(plane.n2p(point_exp), color=mn.YELLOW)
+            cvt = mn.ComplexValueTracker(value=1)
+            d2 = mn.Dot(plane.n2p(point_exp), color=mn.YELLOW)#.add_updater(
+                #lambda d: d.move_to(plane.n2p(cvt.get_value())))
             self.play(mn.Create(d2))
-            p_mov = point_exp
-            p_movs = [p_mov]
-            # l1 = mn.MathTex()\
-            #     .add_updater(lambda l: l.become(mn.MathTex(format_complex(d2.get_value()))))\
-            #     .add_updater(lambda l: l.next_to(d2, mn.UR))
-            # self.play(mn.Create(l1))
+            # p_mov = point_exp
+            
             for ind in range(1, índice):
-                p_mov = p_mov * point_exp
-                p1 = (p_movs[-1].real, p_movs[-1].imag, 0)
-                p2 = (p_mov.real, p_mov.imag, 0)
-                mov_path = mn.Line(p1, p2)
-                p_movs.append(p_mov)
+                p_mov = ind + 1 #p_mov * point_exp
                 
-                self.play(mn.MoveAlongPath(d2, mov_path))
-                self.wait()
+                path_eq = lambda t: point_exp**t
+                
+                # Define the update function for the point
+                def update_point(mob):
+                    mob.move_to(plane.n2p(path_eq(cvt.get_value())))
+        
+                # update_point.t = 0
+                d2.add_updater(update_point)
+                self.play(cvt.animate.set_value(p_mov), run_time=1, rate_func=mn.linear)
+                # self.play(mn.MoveAlongPath(d2, mov_path))
+                self.wait(1)
                 
         self.wait()
 
