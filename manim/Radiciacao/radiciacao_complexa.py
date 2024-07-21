@@ -27,6 +27,11 @@ zoom_factor = 2.0
 
 format_complex = lambda z: str(round(z.real, 1)) + ("-" if z.imag < 0 else "+") + str(round(z.imag, 1)) + 'i'
 
+class CenaSoluçãoEq(mn.Scene):
+    def construct(self):
+        t = mn.MathTex(r'\sqrt['  + str(índice) + r']{' + str(radicando) + '}')
+        
+
 class CenaRaízes(mn.MovingCameraScene):
     def construct(self): #, radicando, índice):
         plane = mn.ComplexPlane(x_range=(-int(7*zoom_factor), int(7*zoom_factor)),
@@ -73,12 +78,16 @@ class CenaRaízes(mn.MovingCameraScene):
             cvt = mn.ComplexValueTracker(value=1)
             d2 = mn.Dot(plane.n2p(point_exp), color=mn.YELLOW)#.add_updater(
                 #lambda d: d.move_to(plane.n2p(cvt.get_value())))
-            self.play(mn.Create(d2))
+            
             # p_mov = point_exp
             
-            for ind in range(1, índice):
-                p_mov = ind + 1 #p_mov * point_exp
+            l2 = mn.MathTex()\
+                .add_updater(lambda l: l.become(mn.MathTex("({:.2f})^{{{:.2f}}}".format(point_exp, cvt.get_value().real))))\
+                .add_updater(lambda l: l.next_to(d2, mn.UR))
                 
+            self.play(mn.Create(d2), mn.Create(l2))
+            
+            for ind in range(1, índice):
                 path_eq = lambda t: point_exp**t
                 
                 # Define the update function for the point
@@ -87,9 +96,11 @@ class CenaRaízes(mn.MovingCameraScene):
         
                 # update_point.t = 0
                 d2.add_updater(update_point)
-                self.play(cvt.animate.set_value(p_mov), run_time=1, rate_func=mn.linear)
+                self.play(cvt.animate.set_value(ind + 1), run_time=1, rate_func=mn.linear)
                 # self.play(mn.MoveAlongPath(d2, mov_path))
                 self.wait(1)
+            
+            self.remove(l2)
                 
         self.wait()
 
