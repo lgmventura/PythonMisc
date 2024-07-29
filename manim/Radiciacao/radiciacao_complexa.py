@@ -123,6 +123,8 @@ class CenaSoluçãoEq(mn.Scene):
         self.wait(5)
         self.clear()
         
+class CenaSoluçãoEq2(mn.Scene):
+    def construct(self):
         width = mn.config.frame_width/2 * 0.9
         # eq_r_str = ''.join('$r = \sqrt[', f'{índice}', ']{', f'{radicando}', '}', ' = ', f'{np.power(radicando, 1/índice)}$')
         tex_lines = mn.VGroup(
@@ -134,14 +136,14 @@ class CenaSoluçãoEq(mn.Scene):
             # will come after
             mn.Tex('Escrevendo a equação com a constante ', '$a$', ' na forma polar:'),
             mn.MathTex('x', f'^{índice}', ' = ', f'{radicando}', r'e^{','{i}','2k\pi}'),
-            mn.Tex('Daí, temos o raio ', f'$r = \sqrt[{índice}]{{{radicando}}}$', '$ = $', f'${np.power(radicando, 1/índice):.4g}$'),
+            mn.Tex('Daí, temos o raio ', f'$r = \sqrt[{índice}]{{{radicando}}}$', '$ = $', f'${np.power(radicando, 1/índice):.4g}$'.replace('.', ',')),
             mn.Tex('E os ângulos ', f'${índice}$', '$\\theta$', '$ = $', '$2k\pi$'),
-            mn.MathTex('\\theta', ' = ', '\\frac{2k\pi}' + f'{{{índice}}}', ',',),
+            mn.MathTex('\\theta', ' = ', '\\frac{2k\pi}' + f'{{{índice}}}', ';',),
             
             
             ).arrange(mn.DOWN, buff=0.4).set_width(width)
         
-        k_text = mn.MathTex('k = ', f"{', '.join(str(k) for k in list(range(índice)))}", font_size=12)
+        k_text = mn.MathTex('k = ', f"{'; '.join(str(k) for k in list(range(índice)))}", font_size=12)
         
         
         color_map = {'$i = \sqrt{-1}$': mn.GREEN,
@@ -249,12 +251,16 @@ class CenaSoluçãoEq(mn.Scene):
         self.play(mn.MoveAlongPath(d, path), run_time=1)#, rate_func=mn.linear)
         self.wait(4)
         
-        self.remove(arrow_to_x, arrow_to_y, p_x_label, p_y_label, arrow_to_d, angle_arc, p_r_label, p_ang_label)
+        self.remove(arrow_to_x, arrow_to_y, p_x_label, p_y_label, arrow_to_d, angle_arc, p_r_label, p_ang_label, d)
         
         points = calc_raízes(radicando, índice)
         points_real = []
+        roots_arrows = []
+        dots = []
         for point in points:
-            points_real.append([point.real, point.imag, 0])
+            points_real.append(complex_plane.n2p(point))
+            roots_arrows.append(mn.Arrow(complex_plane.n2p(0), complex_plane.n2p(point)))
+            dots.append(mn.Dot(complex_plane.n2p(point), color=mn.YELLOW))
         polyg = mn.Polygon(*points_real)
         
         self.play(mn.Write(tex_lines[1]))  # Escrevendo na forma polar
@@ -265,10 +271,34 @@ class CenaSoluçãoEq(mn.Scene):
         self.wait()
         self.play(mn.Write(tex_lines[4]))  # ângulo
         self.wait()
-        self.play(mn.Write(tex_lines[5]))
+        self.play(mn.Write(tex_lines[5]))  # ângulo continuação
         self.wait()
         self.play(mn.Write(k_text))
         self.wait()
+        
+        self.play(*map(mn.Create, roots_arrows))
+        self.play(*map(mn.Create, dots))
+        self.wait()
+        self.play(mn.Create(polyg))
+        self.wait(4)
+        self.remove(*roots_arrows, polyg)
+        self.wait()
+        
+        âng = mn.Arc(
+                start_angle=0,
+                angle=2*np.pi/índice,
+                radius=0.5,
+                color=mn.YELLOW,
+                ).shift(complex_plane.n2p(0))
+        
+        raio = mn.DoubleArrow(complex_plane.n2p(0), complex_plane.n2p(points[1]))
+        
+        self.play(mn.Indicate(tex_lines[3]))
+        self.play(mn.Transform(tex_lines[3].copy(), raio), run_time=2)
+        self.wait()
+        self.play(mn.Indicate(tex_lines[5]))
+        self.play(mn.Transform(tex_lines[5].copy(), âng), run_time=2)
+        self.wait(4)
         
 
 class CenaRaízes(mn.MovingCameraScene):
