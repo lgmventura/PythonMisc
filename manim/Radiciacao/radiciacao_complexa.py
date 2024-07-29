@@ -276,13 +276,6 @@ class CenaSoluçãoEq2(mn.Scene):
         self.play(mn.Write(k_text))
         self.wait()
         
-        self.play(*map(mn.Create, roots_arrows))
-        self.play(*map(mn.Create, dots))
-        self.wait()
-        self.play(mn.Create(polyg))
-        self.wait(4)
-        self.remove(*roots_arrows, polyg)
-        self.wait()
         
         âng = mn.Arc(
                 start_angle=0,
@@ -293,13 +286,23 @@ class CenaSoluçãoEq2(mn.Scene):
         
         raio = mn.DoubleArrow(complex_plane.n2p(0), complex_plane.n2p(points[1]))
         
+        tex_raio_copy = tex_lines[3].copy()
+        tex_ang_copy = tex_lines[5].copy()
         self.play(mn.Indicate(tex_lines[3]))
-        self.play(mn.Transform(tex_lines[3].copy(), raio), run_time=2)
+        self.play(mn.Transform(tex_raio_copy, raio), run_time=2)
         self.wait()
         self.play(mn.Indicate(tex_lines[5]))
-        self.play(mn.Transform(tex_lines[5].copy(), âng), run_time=2)
-        self.wait(4)
+        self.play(mn.Transform(tex_ang_copy, âng), run_time=2)
+        self.wait(2)
         
+        self.remove(tex_raio_copy, tex_ang_copy)
+        self.play(*map(mn.Create, roots_arrows))
+        self.play(*map(mn.Create, dots))
+        self.wait()
+        self.play(mn.Create(polyg))
+        self.wait(4)
+        self.remove(*roots_arrows, polyg)
+        self.wait(2)
 
 class CenaRaízes(mn.MovingCameraScene):
     def construct(self): #, radicando, índice):
