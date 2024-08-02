@@ -31,7 +31,16 @@ amplitude = int(np.iinfo(np.int16).max / 10)
 real_mult = 100
 imag_mult = 100
 
+balance_real = 0.6
+balance_imag = -0.6
+
 wavdata = np.array([])
+
+def balance_to_left_right_amp(balance: float) -> (float, float):
+    bal_0_to_2 = 1 + balance
+    left = min(bal_0_to_2, 1)
+    right = min(2 - bal_0_to_2, 1)
+    return left, right
 
 def crossfade(x1, x2, crossfade_length, sample_rate):
     """
@@ -83,12 +92,16 @@ for idx, raiz in enumerate(raízes):
         r_pot = raiz**jdx
         
         # data_n = amplitude * np.sin(2. * np.pi * r_pot.real*real_mult * np.cos(r_pot.imag)*imag_mult * t)
-        data_n = amplitude * (np.sin(2. * np.pi * (r_pot).real*real_mult * t) + np.cos(2. * np.pi * (r_pot).imag*imag_mult * t))
+        data_n_real = amplitude * np.sin(2. * np.pi * (r_pot).real*real_mult * t)
+        data_n_imag = amplitude * np.cos(2. * np.pi * (r_pot).imag*imag_mult * t)
+        
         if idx == 0 and jdx == 1:
-            wavdata = np.copy(data_n)
+            wavdata_real = np.copy(data_n_real)
+            wavdata_imag = np.copy(data_n_imag)
         else:
             # wavdata = np.append(wavdata, data_n)
-            wavdata = crossfade(wavdata, data_n, 0.04, sample_rate=samplerate)
+            wavdata_real = crossfade(wavdata_real, data_n_real, 0.04, sample_rate=samplerate)
+            wavdata_imag = crossfade(wavdata_imag, data_n_imag, 0.04, sample_rate=samplerate)
     
         # seqüência de elevação (potência)
         if jdx == índ:  # neste caso, só faz a parte estática
@@ -101,9 +114,17 @@ for idx, raiz in enumerate(raízes):
         # data_n = amplitude * (np.sin(2. * np.pi * (raiz**t2).real*real_mult * t) + np.cos(2. * np.pi * (raiz**t2).imag*imag_mult * t))
         phase_real = np.cumsum(real_mult * (raiz**t2).real) / samplerate * 2 * np.pi
         phase_imag = np.cumsum(imag_mult * (raiz**t2).imag) / samplerate * 2 * np.pi
-        data_n = amplitude * (np.sin(phase_real) + np.cos(phase_imag))
+        data_n_real = amplitude * np.sin(phase_real)
+        data_n_imag = amplitude * np.cos(phase_imag)
         # wavdata = np.append(wavdata, data_n)
-        wavdata = crossfade(wavdata, data_n, 0.04, sample_rate=samplerate)
+        
+        wavdata_real = crossfade(wavdata_real, data_n_real, 0.04, sample_rate=samplerate)
+        wavdata_imag = crossfade(wavdata_imag, data_n_imag, 0.04, sample_rate=samplerate)
+        
+left_real, right_real = balance_to_left_right_amp(balance_real)
+left_imag, right_imag = balance_to_left_right_amp(balance_imag)
+wavdata = np.column_stack((left_real*wavdata_real + left_imag*wavdata_imag,
+                           right_real*wavdata_real + right_imag*wavdata_imag))
 
 outPath = '/home/luiz/Documents/workspace/PythonMisc/manim/Radiciacao'
 wf.write(path.join(outPath, f"rad_ind{índ}_radic{radic}.wav"), samplerate, wavdata.astype(np.int16))
