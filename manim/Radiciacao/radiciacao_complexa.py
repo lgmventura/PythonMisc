@@ -21,7 +21,7 @@ def calc_raízes(radicando: complex, índice=2):
     return raízes
 
 radicando = 8
-índice = 5
+índice = 3
 
 zoom_factor = 2.0
 
@@ -59,10 +59,10 @@ class CenaRaizQuadrada(mn.Scene):
         self.wait()
         self.play(mn.TransformMatchingTex(tex_lines[3].copy(), tex_lines[4],
                                           key_map={'\sqrt{4}': '2'}))
-        self.wait()
-        self.play(mn.Indicate(tex_lines[3][2]))
-        self.wait()
+        self.wait(4)
         self.play(mn.Indicate(tex_lines[3][3]))
+        self.wait(8)
+        self.play(mn.Indicate(tex_lines[3][2]))
         self.wait()
 
 class cenaRaizCúbica(mn.Scene):
@@ -97,17 +97,17 @@ class CenaSoluçãoEq(mn.Scene):
         # t = mn.MathTex(r'\sqrt['  + str(índice) + r']{' + str(radicando) + '}')
         tex_lines = mn.VGroup(
             mn.MathTex(f'{{x}}^',f'{índice}', '=', f'{radicando}'),
-            mn.Tex('Equações deste tipo, ','${x}$','$^{n}$ ','$ = $',' ${a}$',', nas quais ','${a}$',' é uma constante, possuem, no máximo, 2 raízes reais.'),
-            mn.Tex('Portanto, para qualquer ','${n}$','$ > 2$, teremos raízes complexas.'),
+            mn.Tex('Equações deste tipo, ','${x}$','$^{m}$ ','$ = $',' ${n}$',', nas quais ','${n}$',' é uma constante, possuem, no máximo, 2 raízes reais.'),
+            mn.Tex('Portanto, para qualquer ','${m}$','$ > 2$, teremos raízes complexas.'),
             ).arrange(mn.DOWN, buff=0.4).set_width(mn.config.frame_width - 1)
         
         
         # Define a color map for multiple substrings
         color_map = {
             "{x}": mn.GREEN,
-            "{n}": mn.BLUE_C,
+            "{m}": mn.BLUE_C,
             f"{índice}": mn.BLUE_C,
-            "{a}": mn.ORANGE,
+            "{n}": mn.ORANGE,
             f"{radicando}": mn.ORANGE
         }
         
@@ -121,7 +121,7 @@ class CenaSoluçãoEq(mn.Scene):
         self.wait()
         self.play(mn.Write(tex_lines[2], run_time=2))
         self.wait(5)
-        self.clear()
+        # self.clear()
         
 class CenaSoluçãoEq2(mn.Scene):
     def construct(self):
@@ -134,11 +134,13 @@ class CenaSoluçãoEq2(mn.Scene):
             
             
             # will come after
-            mn.Tex('Escrevendo a equação com a constante ', '$a$', ' na forma polar:'),
-            mn.MathTex('x', f'^{índice}', ' = ', f'{radicando}', r'e^{','{i}','2k\pi}'),
+            mn.Tex('Reescrevendo a equação com a constante ', '$n$', ' na forma polar:'),
+            mn.MathTex('x', f'^{índice}', ' = ', f'{radicando}', r'e^{','{i}','2k\pi}'),#, '\longrightarrow', 'x', '=', '\sqrt[índice]{}'),
+            mn.MathTex('{x}', '=', f'\sqrt[{índice}]' + '{' + f'{radicando}', 'e^{','{i}','2k\pi}}'),
+            mn.MathTex('{x}', '=', f'\sqrt[{índice}]' + f'{{{radicando}}}', 'e^{','{i}', r'\frac{2k\pi}{', f'{índice}' + '}'),
             mn.Tex('Daí, temos o raio ', f'$r = \sqrt[{índice}]{{{radicando}}}$', '$ = $', f'${np.power(radicando, 1/índice):.4g}$'.replace('.', ',')),
             mn.Tex('E os ângulos ', f'${índice}$', '$\\theta$', '$ = $', '$2k\pi$'),
-            mn.MathTex('\\theta', ' = ', '\\frac{2k\pi}' + f'{{{índice}}}', ';',),
+            mn.MathTex('\\theta', ' = ', r'\frac{2k\pi}' + f'{{{índice}}}', ';',),
             
             
             ).arrange(mn.DOWN, buff=0.4).set_width(width)
@@ -147,30 +149,38 @@ class CenaSoluçãoEq2(mn.Scene):
         
         
         color_map = {'$i = \sqrt{-1}$': mn.GREEN,
+                     '{n}': mn.BLUE_C,
+                     f'{índice}': mn.BLUE_C,
                      '{i}': mn.GREEN,
                      '$a + bi$': mn.RED,
                      '$re^{i\phi}$': mn.YELLOW,
                      '{a}': mn.ORANGE,
-                     '2k\pi}': mn.PURPLE,
+                     '2k\pi': mn.PURPLE,
                      }
         
         tex_lines[0].set_color_by_tex_to_color_map(color_map)
         tex_lines[1].set_color_by_tex_to_color_map(color_map)
         tex_lines[2].set_color_by_tex_to_color_map(color_map)
+        # tex_lines[5].set_color_by_tex_to_color_map(color_map)
+        tex_lines[6].set_color_by_tex_to_color_map(color_map)
+        # tex_lines[7].set_color_by_tex_to_color_map(color_map)
         
+        rg = np.round(2*np.power(radicando, 1/índice))
         complex_plane = mn.ComplexPlane(
-            x_range=[-3, 3, 1],
-            y_range=[-3, 3, 1],
+            x_range=[-rg, rg, 1],
+            y_range=[-rg, rg, 1],
             background_line_style={
                 "stroke_color": mn.BLUE_D,
                 "stroke_width": 2,
             }
-        )
+        ).add_coordinates()
         
         tex_lines.to_edge(mn.LEFT)#, buff=-1)
-        complex_plane.to_edge(mn.RIGHT)#, buff=1)
+        complex_plane.to_edge(mn.RIGHT, buff=-1)
+        # complex_plane.shift([width/2, 0, 0])  # dá no mesmo
+        # complex_plane.scale(3/rg)
         
-        k_text.next_to(tex_lines[5], mn.RIGHT)
+        k_text.next_to(tex_lines[7], mn.RIGHT)
         
         point = complex(-1, -2)
         # cvt = mn.ComplexValueTracker(value=complex(1, 2))
@@ -183,6 +193,8 @@ class CenaSoluçãoEq2(mn.Scene):
             start=complex_plane.n2p(d.get_center()[1] + 1 + 0j),  # Same x, y=0
             end=d.get_center(),
             buff=0,
+            max_stroke_width_to_length_ratio=1.5,
+            max_tip_length_to_length_ratio=0.08,
             color=mn.RED
         ))
         
@@ -191,6 +203,8 @@ class CenaSoluçãoEq2(mn.Scene):
             start=complex_plane.n2p(d.get_center()[1]*1j + 0),  # Same x, y=0
             end=d.get_center(),
             buff=0,
+            max_stroke_width_to_length_ratio=1.5,
+            max_tip_length_to_length_ratio=0.08,
             color=mn.RED
         ))
         
@@ -199,6 +213,8 @@ class CenaSoluçãoEq2(mn.Scene):
             start=complex_plane.n2p(0),  # Same x, y=0
             end=d.get_center(),
             buff=0,
+            max_stroke_width_to_length_ratio=1.5,
+            max_tip_length_to_length_ratio=0.08,
             color=mn.YELLOW
         ))
         
@@ -212,22 +228,23 @@ class CenaSoluçãoEq2(mn.Scene):
         p_y_label = mn.always_redraw(lambda: mn.MathTex(
             f"b = {(d.get_center()[1]):.2f}i", font_size=20,
             color=mn.RED
-        ).next_to(arrow_to_x, mn.RIGHT, buff=-0.1))
+        ).next_to(arrow_to_x, mn.RIGHT, buff=+0.06))
         
         p_x_label = mn.always_redraw(lambda: mn.MathTex(
             f"a = {(d.get_center()[0] - complex_plane.get_center()[0]):.2f}", font_size=20,
             color=mn.RED
-        ).next_to(arrow_to_y, mn.UP, buff=-0.08))
+        ).next_to(arrow_to_y, mn.UP, buff=+0.06))
         
         p_r_label = mn.always_redraw(lambda: mn.MathTex(
             f"r = {np.sqrt((d.get_center()[0] - complex_plane.get_center()[0])**2 + (d.get_center()[1]**2)):.2f}", font_size=20,
             color=mn.YELLOW
-        ).next_to(arrow_to_d, mn.LEFT))#, buff=-0.1))
+        #).next_to(arrow_to_d, mn.LEFT, buff=+0.1))
+        ).move_to(arrow_to_d.get_center()).shift([-0.8, 0, 0]))
         
         p_ang_label = mn.always_redraw(lambda: mn.MathTex(
             f"\phi = {np.arctan(d.get_center()[1]/(d.get_center()[0] - complex_plane.get_center()[0])) + np.pi*((np.sign(d.get_center()[0] - complex_plane.get_center()[0]) - 1)/2):.2f} rad", font_size=20,
             color=mn.YELLOW
-        ).move_to(angle_arc.get_center()).shift([0.5, -0.5, 0]))#, mn.DOWN, aligned_edge=d.get_center()))#, buff=-0.1))
+        ).move_to(angle_arc.get_center()).shift([0.6, -0.01, 0]))#, mn.DOWN, aligned_edge=d.get_center()))#, buff=-0.1))
         
         # def update_point(mob):
         #     mob.move_to(plane.n2p(path_eq(cvt.get_value())))
@@ -248,8 +265,8 @@ class CenaSoluçãoEq2(mn.Scene):
         self.play(mn.Create(arrow_to_d), mn.Create(angle_arc))
         self.play(mn.Create(p_r_label), mn.Create(p_ang_label))
         self.wait()
-        self.play(mn.MoveAlongPath(d, path), run_time=1)#, rate_func=mn.linear)
-        self.wait(4)
+        self.play(mn.MoveAlongPath(d, path), run_time=2)#, rate_func=mn.linear)
+        self.wait(6)
         
         self.remove(arrow_to_x, arrow_to_y, p_x_label, p_y_label, arrow_to_d, angle_arc, p_r_label, p_ang_label, d)
         
@@ -259,19 +276,30 @@ class CenaSoluçãoEq2(mn.Scene):
         dots = []
         for point in points:
             points_real.append(complex_plane.n2p(point))
-            roots_arrows.append(mn.Arrow(complex_plane.n2p(0), complex_plane.n2p(point)))
-            dots.append(mn.Dot(complex_plane.n2p(point), color=mn.YELLOW))
+            roots_arrows.append(mn.Arrow(
+                complex_plane.n2p(0),
+                complex_plane.n2p(point),
+                max_stroke_width_to_length_ratio=1.6,
+                max_tip_length_to_length_ratio=0.05,
+                buff=0.05,
+                color=mn.YELLOW,
+                ))
+            dots.append(mn.Dot(complex_plane.n2p(point), color=mn.RED_C))
         polyg = mn.Polygon(*points_real)
         
-        self.play(mn.Write(tex_lines[1]))  # Escrevendo na forma polar
-        self.wait()
-        self.play(mn.Write(tex_lines[2]))  # x^n = a
-        self.wait()
-        self.play(mn.Write(tex_lines[3]))  # raio
-        self.wait()
-        self.play(mn.Write(tex_lines[4]))  # ângulo
-        self.wait()
-        self.play(mn.Write(tex_lines[5]))  # ângulo continuação
+        self.play(mn.Write(tex_lines[1]))  # Reescrevendo na forma polar
+        self.wait(2)
+        self.play(mn.Write(tex_lines[2]))  # x^m = n
+        self.wait(12)
+        self.play(mn.TransformMatchingTex(tex_lines[2].copy(), tex_lines[3]))  # x = sqrt[m](n)
+        self.wait(2)
+        self.play(mn.TransformMatchingTex(tex_lines[3].copy(), tex_lines[4]))  # x = sqrt[m](n)
+        self.wait(3)
+        self.play(mn.Write(tex_lines[5]))  # raio
+        self.wait(3)
+        self.play(mn.Write(tex_lines[6]))  # ângulo
+        self.wait(3)
+        self.play(mn.Write(tex_lines[7]))  # ângulo continuação
         self.wait()
         self.play(mn.Write(k_text))
         self.wait()
@@ -284,14 +312,21 @@ class CenaSoluçãoEq2(mn.Scene):
                 color=mn.YELLOW,
                 ).shift(complex_plane.n2p(0))
         
-        raio = mn.DoubleArrow(complex_plane.n2p(0), complex_plane.n2p(points[1]))
+        raio = mn.DoubleArrow(
+            complex_plane.n2p(0),
+            complex_plane.n2p(points[1]),
+            buff=0.05,
+            max_stroke_width_to_length_ratio=1.4,
+            max_tip_length_to_length_ratio=0.05,
+            color=mn.YELLOW,
+            )
         
-        tex_raio_copy = tex_lines[3].copy()
-        tex_ang_copy = tex_lines[5].copy()
-        self.play(mn.Indicate(tex_lines[3]))
+        tex_raio_copy = tex_lines[5].copy()
+        tex_ang_copy = tex_lines[7].copy()
+        self.play(mn.Indicate(tex_lines[5]))  # indicar raio
         self.play(mn.Transform(tex_raio_copy, raio), run_time=2)
         self.wait()
-        self.play(mn.Indicate(tex_lines[5]))
+        self.play(mn.Indicate(tex_lines[7]))  # indicar ângulo
         self.play(mn.Transform(tex_ang_copy, âng), run_time=2)
         self.wait(2)
         
@@ -329,14 +364,18 @@ class CenaRaízes(mn.MovingCameraScene):
         lbs = []
         for point in points:
             d = mn.Dot(plane.n2p(point), color=mn.YELLOW)
-            lb = mn.MathTex("{:.2f}".format(point)).next_to(d, mn.UR, 0.1)
+            lb = mn.MathTex("{:.2f}".format(point), font_size=26)#.shift(plane.n2p(point * 1.5)) #.next_to(d, mn.UR, 0.1)
+            if np.abs(point.imag) < 0.05:
+                lb = lb.shift(plane.n2p(point * 1.6 + 0.2j))
+            else:
+                lb = lb.shift(plane.n2p(point * 1.3))
             ds.append(d)
             lbs.append(lb)
             self.play(mn.Create(d), mn.Create(lb))
         self.wait()
         
         # clear stuff to render multiple multiplication (exponent) of some points
-        points_exponent = [points[0], points[1], points[2]]  # choose which to show here
+        points_exponent = [points[0], points[1], points[2], points[3]]  # choose which to show here
         fade_out = [
             mn.FadeOut(t),  # was transformed in polygn, but we need to use the original
             mn.FadeOut(*lbs),
@@ -390,6 +429,47 @@ class CenaRaízes(mn.MovingCameraScene):
             self.wait()
                 
         self.wait()
+
+class CenaParÍmpar(mn.Scene):
+    def construct(self):
+        complex_plane = mn.ComplexPlane(
+            x_range=[-8, 8, 1],
+            y_range=[-4, 4, 1],
+            background_line_style={
+                "stroke_color": mn.BLUE_D,
+                "stroke_width": 2,
+            }
+        )#.add_coordinates()
+        
+        self.play(mn.Create(complex_plane))
+        
+        # polígonos
+        r = 3
+        d1 = mn.Dot(complex_plane.n2p(r))
+        d2 = mn.Dot(complex_plane.n2p(-r))
+        self.add(d1)
+        for m in range(2, 20):  # polígono
+            poly = []
+            for p in range(m):
+                âng = p * 2*np.pi/m
+                point = [r * (np.cos(âng)), r * (np.sin(âng)), 0]
+                poly.append(point)
+            polyg = mn.Polygon(*poly)
+            text = mn.Text(f'm = {m}').move_to(complex_plane.n2p(-3 - 3j))
+            
+            self.add(text)
+            self.add(polyg)
+            if m%2 == 0:
+                self.add(d2)
+            else:
+                self.remove(d2)
+            self.wait(0.5)
+            
+            self.remove(text)
+            self.remove(polyg)
+        
+        self.remove(d1)
+        self.wait(4)
 
 # cp = CenaRaizQuadrada()
 # cp.construct()
