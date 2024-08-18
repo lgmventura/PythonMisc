@@ -29,6 +29,8 @@ from selenium.webdriver.firefox.options import Options
 
 from PIL import Image
 
+from make_colour_transp import make_transparent
+
 # croácia 2013 (infelizmente, quase nenhum dado de GPS)
 #photos_dir = '/media/luiz/Elements/FotosEtVideos/Nexus4/2013-10-22/Camera'
 
@@ -101,11 +103,6 @@ for idxFile, file in enumerate(files_sorted):
             
             if dtime > dtime_min and \
                 dtime < dtime_max:
-                folium.Marker(
-                  location=[gps_lat_dd, gps_lon_dd],
-                  popup=file + '\n' + dtime.strftime("%Y-%m-%d %H:%M:%S"),
-                  # icon=folium.Icon(color='gray', icon='ok'),
-                  ).add_to(mp)
                 
                 iData = {'file': file[:-4],
                          'extension': file[-4:],
@@ -128,10 +125,6 @@ for idxFile, file in enumerate(files_sorted):
             
             if dtime > dtime_min and \
                 dtime < dtime_max:
-                folium.Marker(
-                  location=[gps_lat_dd, gps_lon_dd],
-                  popup=file + '\n' + dtime.strftime("%Y-%m-%d %H:%M:%S"),
-                  ).add_to(mp)
                 
                 iData = {'file': file[:-4],
                          'extension': file[-4:],
@@ -141,6 +134,59 @@ for idxFile, file in enumerate(files_sorted):
                 data = pd.concat([data, pd.DataFrame(iData, index=[0])], ignore_index=True)
 
 data = data.sort_values('datetime')
+
+# url = "https://leafletjs.com/examples/custom-icons/{}".format
+# icon_image = url("leaf-red.png")
+# shadow_image = url("leaf-shadow.png")
+
+icon_red = '/home/luiz/Pictures/Icons/Pino localidade 2 - vermelho.png'
+icon_grey = '/home/luiz/Pictures/Icons/Pino localidade 2 - cinza.png'
+icon_shadow = '/home/luiz/Pictures/Icons/Pino localidade 2 - sombra 2.png'
+
+nRows = data.shape[0]
+for idxRow, iRow in data.iterrows():
+    # icons must be initialized everz time: https://stackoverflow.com/questions/74200088/using-custom-icons-for-multiple-locations-with-folium-and-pandas
+    icon_past = folium.CustomIcon(
+        icon_grey,
+        icon_size=(28, 50),
+        icon_anchor=(14, 49),
+        shadow_image=icon_shadow,
+        shadow_size=(28, 50),
+        shadow_anchor=(14, 49),
+        popup_anchor=(-3, -76),
+    )
+
+    icon_current = folium.CustomIcon(
+        icon_red,
+        icon_size=(36, 64),
+        icon_anchor=(18, 63),
+        shadow_image=icon_shadow,
+        shadow_size=(50, 64),
+        shadow_anchor=(20, 63),
+        popup_anchor=(-3, -76),
+    )
+    
+    gps_lat_dd = iRow.gps_lat
+    gps_lon_dd = iRow.gps_lon
+    dtime = iRow.datetime
+    file = iRow.file
+    if idxRow < nRows - 1:
+        folium.Marker(
+                      location=[gps_lat_dd, gps_lon_dd],
+                      popup=file + '\n' + dtime.strftime("%Y-%m-%d %H:%M:%S"),
+                      icon=icon_past,
+                      # icon=folium.Icon(color='gray', icon='ok'),
+                      ).add_to(mp)
+    elif idxRow == nRows - 1:
+        folium.map.CustomPane("current", z_index=600).add_to(mp)
+        folium.Marker(
+                      location=[gps_lat_dd, gps_lon_dd],
+                      popup=file + '\n' + dtime.strftime("%Y-%m-%d %H:%M:%S"),
+                      # color='red',
+                      icon=icon_current,
+                      pane='current',
+                      # icon=folium.Icon(color='gray', icon='ok'),
+                      ).add_to(mp)
 
 
 for index, row in data.iterrows():
@@ -187,6 +233,19 @@ driver.quit()
 
 # Open the image and save it using Pillow for further processing if needed
 image = Image.open(screenshot_path)
-image.save('final_map_screenshot.png')
+
+# cropping borders (unwanted logos and leaf)
+width, height = image.size
+left = 54
+top = 0
+right = width - 100
+bottom = height - 20
+
+image = image.crop((left, top, right, bottom))
+
+image = make_transparent(image, colour_rgb=[170, 211, 223])
+
+out_file = 'final_map_screenshot.png'
+image.save(out_file)
 
 print("Screenshot saved successfully.")

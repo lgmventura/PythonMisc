@@ -38,8 +38,8 @@ wavdata = np.array([])
 
 def balance_to_left_right_amp(balance: float) -> (float, float):
     bal_0_to_2 = 1 + balance
-    left = min(bal_0_to_2, 1)
-    right = min(2 - bal_0_to_2, 1)
+    left = min(2 - bal_0_to_2, 1)
+    right = min(bal_0_to_2, 1)
     return left, right
 
 def crossfade(x1, x2, crossfade_length, sample_rate):

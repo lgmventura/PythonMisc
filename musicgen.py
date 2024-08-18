@@ -241,6 +241,13 @@ def algorithm6(num_beats, modeList: list = [0,2,4,5,7,9,11]):
             
     return data, dataCtpt
 
+def algorithm7(nums: complex, t0, t1, num_beats):
+    data = [] # one start note
+    dataCtpt = [] # data counterpoint
+    
+    
+
+
 # algorithm to use, change here:
 algToUse = algorithm6
 
