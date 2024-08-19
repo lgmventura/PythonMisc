@@ -45,8 +45,7 @@ photos_dirs = [photos_dir1,
 
 # world = geopandas.read_file(geodatasets.get_path("naturalearth.land"))
 
-# fig, ax = plt.subplots(figsize=(24, 18))
-# world.plot(ax=ax, alpha=0.4, color="grey")
+# os dados de GPS vêm em grau, minuto e segundo no EXIF, mas precisamos em grau vírgula flutuante
 def dms_to_dd(d, m, s):
     dd = d + float(m)/60 + float(s)/3600
     return dd
@@ -56,6 +55,7 @@ data = pd.DataFrame()
 mp = folium.Map(location=[64.98, -18.61], tiles='OpenStreetMap', zoom_start=7.2)# tiles="CartoDB Positron", zoom_start=7)
 all_coords = []
 
+# selecionando data inicial e data final para filtrar as fotos e os vídeos
 # croácia 2013
 # dtime_min = datetime(2013, 10, 1, 16, 00, 00)
 # dtime_max = datetime(2013, 10, 7, 15, 00, 00)
@@ -66,17 +66,20 @@ all_coords = []
 dtime_min = datetime(2023, 9, 23, 12, 00, 00)
 dtime_max = datetime(2023, 9, 24, 4, 00, 00)
 
+
 files = []
 file_paths = []
+# rodar por diretório
 for photo_dir in photos_dirs:
     fs = os.listdir(photo_dir)
     files = files + fs
-    fps = [os.path.join(photo_dir, f) for f in fs]
+    fps = [os.path.join(photo_dir, f) for f in fs] # fps here is file paths
     file_paths = file_paths + fps
-arg_sort = np.argsort(files)
+arg_sort = np.argsort(files)  # ordenar (nem sei se é mais necessário, já que agora eu ordeno depois de novo, já que depois incluí vídeos e diferenciei o pino final dos demais)
 files_sorted = np.array(files)[arg_sort]
 file_paths_sorted = np.array(file_paths)[arg_sort]
 
+# caminhar pelos arquivos ordenados
 for idxFile, file in enumerate(files_sorted):
     if file.endswith('.jpg'):
         full_path = file_paths_sorted[idxFile] # os.path.join(photos_dir, file)
@@ -111,6 +114,7 @@ for idxFile, file in enumerate(files_sorted):
                          'gps_lon': gps_lon_dd}
                 data = pd.concat([data, pd.DataFrame(iData, index=[0])], ignore_index=True)
     
+    # vídeos (se houver mais formatos, adicionar aqui)
     if file.endswith('.mp4'):
         full_path = file_paths_sorted[idxFile] # os.path.join(photos_dir, file)
         full_path = str(full_path)
@@ -133,16 +137,19 @@ for idxFile, file in enumerate(files_sorted):
                          'gps_lon': gps_lon_dd}
                 data = pd.concat([data, pd.DataFrame(iData, index=[0])], ignore_index=True)
 
+# ordenar por data e hora
 data = data.sort_values('datetime')
 
 # url = "https://leafletjs.com/examples/custom-icons/{}".format
 # icon_image = url("leaf-red.png")
 # shadow_image = url("leaf-shadow.png")
 
+# ícones
 icon_red = '/home/luiz/Pictures/Icons/Pino localidade 2 - vermelho.png'
 icon_grey = '/home/luiz/Pictures/Icons/Pino localidade 2 - cinza.png'
 icon_shadow = '/home/luiz/Pictures/Icons/Pino localidade 2 - sombra 2.png'
 
+# adicionar no mapa
 nRows = data.shape[0]
 for idxRow, iRow in data.iterrows():
     # icons must be initialized everz time: https://stackoverflow.com/questions/74200088/using-custom-icons-for-multiple-locations-with-folium-and-pandas
@@ -243,6 +250,7 @@ bottom = height - 20
 
 image = image.crop((left, top, right, bottom))
 
+# make water transparent (you might want this or not)
 image = make_transparent(image, colour_rgb=[170, 211, 223])
 
 out_file = 'final_map_screenshot.png'
