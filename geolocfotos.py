@@ -74,7 +74,7 @@ data = pd.DataFrame()
 # dtime_min = datetime(2023, 9, 23, 12, 00, 00)
 # dtime_max = datetime(2023, 9, 24, 12, 00, 00)#(2023, 10, 8, 8, 00, 00)
 dtime_min = datetime(2023, 9, 23, 12, 00, 00)
-dtime_max = datetime(2023, 9, 28, 4, 00, 00)
+dtime_max = datetime(2023, 10, 8, 4, 00, 00)
 
 
 files = []
@@ -149,6 +149,8 @@ for idxFile, file in enumerate(files_sorted):
 
 # ordenar por data e hora
 data = data.sort_values('datetime')
+
+data = data.reset_index()
 
 # url = "https://leafletjs.com/examples/custom-icons/{}".format
 # icon_image = url("leaf-red.png")
@@ -426,6 +428,9 @@ plt.rcParams["figure.dpi"] = 150 # lower image size
 
 # fig, ax = plt.subplots(figsize=(16, 9))
 
+# if the current point is too close to the last one, we can skip
+lat_lon_tolerance_skip = 0.001
+
 # Step 1: Create the map
 place = ctx.Place("Iceland", zoom=7)
 ax = place.plot()
@@ -455,10 +460,33 @@ if img_grey.mode != 'RGBA':
 if img_red.mode != 'RGBA':
     img_red = img_red.convert('RGBA')
     
+xbounds = ax.get_xbound()
+ybounds = ax.get_ybound()
+
+pos_text = (0.1, 0.86)  # relativa
+
+# absoluta:
+text_x = xbounds[0] + pos_text[0]*(xbounds[1] - xbounds[0])
+text_y = ybounds[0] + pos_text[1]*(ybounds[1] - ybounds[0])
+
+annot = ax.annotate('', (text_x, text_y), fontsize=26)
+
+iframe = 0
 for index, row in data.iterrows():
     lat = row['gps_lat']
     lon = row['gps_lon']
     dtime = row['datetime']
+    
+    delta_days = (dtime - dtime_min).days
+    annot.set_text(f'Dia {delta_days}')
+    
+    # skip if the current lat and lon are too close to the last
+    if index >= 1:
+        lat_prev = data.loc[index - 1]['gps_lat']
+        lon_prev = data.loc[index - 1]['gps_lon']
+        if abs(lat - lat_prev) < lat_lon_tolerance_skip and abs(lon - lon_prev) < lat_lon_tolerance_skip \
+            and index < data.shape[0] - 1:
+            continue
     
     # Define the transformer for converting lat/lon to Web Mercator
     transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
@@ -483,7 +511,7 @@ for index, row in data.iterrows():
     ax.add_artist(ab)
     
     # Save the frame
-    fname = f'tmp/frame_{index:03d}.png'
+    fname = f'tmp/frame_{iframe:03d}.png'
     plt.savefig(fname)
     #     plt.close()
     
@@ -499,6 +527,8 @@ for index, row in data.iterrows():
     image = image.crop((left, top, right, bottom))
     
     image.save(fname)
+    
+    iframe += 1
     
 
 

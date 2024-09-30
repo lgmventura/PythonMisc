@@ -8,8 +8,9 @@ Created on Thu Dec  2 23:11:22 2021
 from music21 import midi, environment
 
 # https://github.com/cuthbertLab/music21/blob/c6fc39204c16c47d1c540b545d0c9869a9cafa8f/music21/midi/__init__.py#L1471
-def populate_midi_track_from_data(mt, data):
-    t = 0
+def populate_midi_track_from_data(mt, data, initial_delay=0):
+    # notes
+    t = initial_delay
     tLast = 0
     for d, p, v in data:
         dt = midi.DeltaTime(mt)

@@ -9,7 +9,7 @@ Created on Sat Nov  4 22:47:44 2023
 from music21 import midi
 import random
 
-fp = '/home/luiz/Music/Composições/Piano solo/20230727 - em 7÷8.mid'
+fp = '/home/luiz/Music/Composições/Piano solo/20240816 - Sinofonia para piano a 4 mãos.mid'
 
 mf = midi.MidiFile()
 

@@ -264,7 +264,7 @@ for mt in mts:
 
 # env = environment.Environment()
 # temp_filename = env.getTempFile('.mid')
-outPath = '/media/luiz/Volume/Dokumente/Musik/Projekte/Kompon/Algoritmos'
+outPath = '/home/luiz/Music/Algoritmos/'
 temp_filename = dtm.isoformat(dtm.now()).replace(':', '')[:17]
 temp_filename = path.join(outPath, temp_filename + '.mid')
 print("Saving file to: %s" % temp_filename)
