@@ -11,9 +11,25 @@ import numpy as np
 import subprocess
 from os import path
 
-fp1 = '/media/luiz/Elements/FotosEtVideos/EOS 550D/2015.07.23/IMG_0651.JPG'
-fp2 = '/media/luiz/Elements/FotosEtVideos/EOS 550D/2015.07.23/IMG_0652.JPG'
-fp3 = '/media/luiz/Elements/FotosEtVideos/EOS 550D/2015.07.23/IMG_0653.JPG'
+# fp1 = '/media/luiz/Elements/FotosEtVideos/EOS 550D/2015.07.23/IMG_1081.JPG'
+# fp2 = '/media/luiz/Elements/FotosEtVideos/EOS 550D/2015.07.23/IMG_1082.JPG'
+# fp3 = '/media/luiz/Elements/FotosEtVideos/EOS 550D/2015.07.23/IMG_1083.JPG'
+
+# fp1 = '/media/luiz/Elements/FotosEtVideos/Canon EOS 700D (2016)/2017.03.04 - ML/IMG_1051.JPG'
+# fp2 = '/media/luiz/Elements/FotosEtVideos/Canon EOS 700D (2016)/2017.03.04 - ML/IMG_1052.JPG'
+# fp3 = '/media/luiz/Elements/FotosEtVideos/Canon EOS 700D (2016)/2017.03.04 - ML/IMG_1053.JPG'
+
+# fp1 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20241105/E22A3944.JPG'
+# fp2 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20241105/E22A3945.JPG'
+# fp3 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20241105/E22A3946.JPG'
+
+# fp1 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20241124/E22A4171.JPG'
+# fp2 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20241124/E22A4172.JPG'
+# fp3 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20241124/E22A4173.JPG'
+
+fp1 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6/E22A6163.JPG'
+fp2 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6/E22A6164.JPG'
+fp3 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6/E22A6165.JPG'
 
 # Input images (bracketed exposures)
 input_images = [fp1, fp2, fp3]
