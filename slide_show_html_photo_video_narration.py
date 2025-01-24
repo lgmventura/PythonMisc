@@ -11,7 +11,7 @@ import json
 resolution = [3840, 1920] # [1920, 1080]
                     #^^^ because of the margins
 
-slides_fp = '/home/luiz/Documents/Viagens/Vietnã 2024 - 2025/slides.json'
+slides_fp = '/home/luiz/Documents/Viagens/Vietnã 2024 - 2025/slides_dia2.json'
 
 audio_fp = 'narracao.mp3'
 
@@ -20,7 +20,12 @@ out_html_fp = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6/slide_show.h
 with open(slides_fp, 'r') as f:
     fs = f.read()
 
-slides = json.loads(fs)
+try:
+    slides = json.loads(fs)
+except json.JSONDecodeError as e:
+    print(f"JSON Decode Error: {e.msg}")
+    print(f"Error occurred at line {e.lineno}, column {e.colno}")
+    raise(RuntimeError(e.msg))
 
 header = '''<!DOCTYPE html>
 <html lang="pt-BR">
@@ -70,7 +75,18 @@ end = 0
 for idx, slide in enumerate(slides):
     end = end + slide['duration']
     if slide['file'].lower().endswith('.mp4'):
-        items.append(f'<video id="video{idx}" class="media" src="{slide["file"]}" muted></video>')
+        if 'muted' in slide.keys():
+            if isinstance(slide['muted'], str):
+                muted = False if slide['muted'].lower() == 'false' else True
+            elif isinstance(slide['muted'], int):
+                muted = bool(slide['muted'])
+        else:
+            muted = True  # default
+        if muted:
+            video_item = f'<video id="video{idx}" class="media" src="{slide["file"]}" muted></video>'
+        else:
+            video_item = f'<video id="video{idx}" class="media" src="{slide["file"]}"></video>'
+        items.append(video_item)
         script_item = '''      {
         type: "video",
         id: "video{idx}",
