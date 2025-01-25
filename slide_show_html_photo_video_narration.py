@@ -68,7 +68,6 @@ header = '''<!DOCTYPE html>
   <div id="presentation">
 '''.replace('{0}', f'{resolution[0]}').replace('{1}', f'{resolution[1]}')
 
-items = []
 script_items = []
 start = 0
 end = 0
@@ -82,29 +81,29 @@ for idx, slide in enumerate(slides):
                 muted = bool(slide['muted'])
         else:
             muted = True  # default
-        if muted:
-            video_item = f'<video id="video{idx}" class="media" src="{slide["file"]}" muted></video>'
-        else:
-            video_item = f'<video id="video{idx}" class="media" src="{slide["file"]}"></video>'
-        items.append(video_item)
-        script_item = '''      {
+
+        script_item = f'''      {{
         type: "video",
         id: "video{idx}",
+        src: "{slide["file"]}",
+        muted: {str(muted).lower()},
         start: {start},
         end: {end}
-      },
-        '''.replace('{idx}', f'{idx}').replace('{start}', f'{start}').replace('{end}', f'{end}')
+      }},
+        '''
+        #.replace('{idx}', f'{idx}').replace('{start}', f'{start}').replace('{end}', f'{end}')
         
     elif slide['file'].lower().endswith('.jpg'):
-        items.append(f'<img id="photo{idx}" class="media" src="{slide["file"]}" alt="Foto {idx}">')
-        script_item = '''      {
+        script_item = f'''      {{
         type: "photo",
         id: "photo{idx}",
+        src: "{slide["file"]}",
         start: {start},
         end: {end},
-        {zoom_pan}
-      },
-        '''.replace('{idx}', f'{idx}').replace('{start}', f'{start}').replace('{end}', f'{end}')
+        zoom_pan
+      }},
+        '''
+        #.replace('{idx}', f'{idx}').replace('{start}', f'{start}').replace('{end}', f'{end}')
         
         zoom_pan_str = '''zoom: [1.0, 1.0],
         pan: [
@@ -116,11 +115,10 @@ for idx, slide in enumerate(slides):
         if 'pan' in slide.keys():
             pan_str = str(slide["pan"]).replace("'", "")
             zoom_pan_str = zoom_pan_str + f'        pan: {pan_str}\n'
-        script_item = script_item.replace('{zoom_pan}', zoom_pan_str)
+        script_item = script_item.replace('zoom_pan', zoom_pan_str)
     script_items.append(script_item)
     start = start + slide['duration']
 
-items_str = '\n'.join(items)
 script_items_str = '\n'.join(script_items)
 
 middle_lines = '''
@@ -135,59 +133,98 @@ middle_lines = '''
 
 final_lines = '''    ];
 
+    const presentation = document.getElementById("presentation");
     const narration = document.getElementById("narration");
 
-    function animate() {
+    let activeElement = null;
+    let lastTime = -1;
+
+    // Função para carregar dinamicamente os slides
+    function loadSlide(slide) {
+      const element = document.createElement(slide.type === "photo" ? "img" : "video");
+      element.classList.add("media");
+      element.id = `slide-${slide.start}`;
+      element.src = slide.src;
+
+      if (slide.type === "video") {
+        element.muted = slide.muted;
+        element.preload = "auto";
+      }
+
+      presentation.appendChild(element);
+      console.log(`Carregado: ${slide.src}`);
+      return element;
+    }
+
+    // Função para animar os slides
+    function animateSlide(slide, element, progress) {
+      if (slide.type === "photo") {
+        const zoomLevel = slide.zoom[0] + progress * (slide.zoom[1] - slide.zoom[0]);
+        const panX = slide.pan[0].x + progress * (slide.pan[1].x - slide.pan[0].x);
+        const panY = slide.pan[0].y + progress * (slide.pan[1].y - slide.pan[0].y);
+
+        element.style.transform = `scale(${zoomLevel})`;
+        element.style.transformOrigin = `${panX}% ${panY}%`;
+      }
+    }
+
+    // Função principal para controlar os slides
+    function updateSlides() {
       const currentTime = narration.currentTime;
 
+      //if (currentTime === lastTime) return; // Evita atualizações desnecessárias
+      //lastTime = currentTime;
+
       slides.forEach(slide => {
-        const element = document.getElementById(slide.id);
-        
-        if (currentTime >= slide.start && currentTime < slide.end) {
-          // Mostra o slide
+        const elementId = `slide-${slide.start}`;
+        let element = document.getElementById(elementId);
+
+        if (currentTime >= slide.start && currentTime <= slide.end) {
+          if (!element) {
+            element = loadSlide(slide);
+          }
+
+          // Exibe e anima o slide atual
+          if (activeElement && activeElement !== element) {
+            activeElement.style.opacity = 0;
+            if (activeElement.tagName === "VIDEO") {
+              activeElement.pause();
+            }
+          }
+
           element.style.opacity = 1;
+          activeElement = element;
 
-          if (slide.type === "photo") {
-            // Calcula progresso para fotos
-            const duration = slide.end - slide.start;
-            const progress = (currentTime - slide.start) / duration;
-
-            // Aplica zoom
-            const zoomLevel = slide.zoom[0] + progress * (slide.zoom[1] - slide.zoom[0]);
-            element.style.transform = `scale(${zoomLevel})`;
-
-            // Aplica pan
-            const panStart = slide.pan[0];
-            const panEnd = slide.pan[1];
-
-            const panX = panStart.x + progress * (panEnd.x - panStart.x);
-            const panY = panStart.y + progress * (panEnd.y - panStart.y);
-
-            element.style.transformOrigin = `${panX}% ${panY}%`;
-            //element.style.transformOrigin = `${panX_px}px ${panY_px}px`;
-          } else if (slide.type === "video") {
-            // Inicia o vídeo quando visível
+          if (slide.type === "video") {
             if (element.paused) {
               element.play();
             }
+          } else {
+            const progress = (currentTime - slide.start) / (slide.end - slide.start);
+            animateSlide(slide, element, progress);
           }
-        } else {
-          // Esconde o slide
-          element.style.opacity = 0;
-
-          if (slide.type === "video") {
-            // Pausa o vídeo quando não visível
-            element.pause();
-            element.currentTime = 0; // Reinicia o vídeo
-          }
+        } else if (element && currentTime > slide.end) {
+          // Remove slides antigos
+          presentation.removeChild(element);
+          console.log(`Removido: ${slide.src}`);
         }
       });
-
-      requestAnimationFrame(animate);
+      requestAnimationFrame(updateSlides);
     }
 
+    // Sincroniza com o áudio
+    //narration.addEventListener("timeupdate", updateSlides);
+
+    // Inicia a animação quando o áudio começar
     narration.addEventListener("play", () => {
-      requestAnimationFrame(animate);
+      //updateSlides();
+      requestAnimationFrame(updateSlides);
+    });
+    
+        
+    // Pausa a atualização se a narração for pausada
+    narration.addEventListener("pause", () => {
+      cancelAnimationFrame(updateSlides);
     });
   </script>
 </body>
@@ -197,7 +234,6 @@ final_lines = '''    ];
 
 with open(out_html_fp, 'w') as f:
     f.write(header)
-    f.write(items_str)
     f.write(middle_lines)
     f.write(script_items_str)
     f.write(final_lines)
