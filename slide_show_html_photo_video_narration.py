@@ -11,7 +11,7 @@ import json
 resolution = [3840, 1920] # [1920, 1080]
                     #^^^ because of the margins
 
-slides_fp = '/home/luiz/Documents/Viagens/Vietnã 2024 - 2025/slides_dia2.json'
+slides_fp = '/home/luiz/Documents/Viagens/Vietnã 2024 - 2025/slides_dia3.json'
 
 audio_fp = 'narracao.mp3'
 
