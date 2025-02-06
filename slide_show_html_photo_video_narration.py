@@ -11,11 +11,13 @@ import json
 resolution = [3840, 1920] # [1920, 1080]
                     #^^^ because of the margins
 
-slides_fp = '/home/luiz/Documents/Viagens/Vietnã 2024 - 2025/slides_dia4.json'
+slides_fp = '/home/luiz/Documents/Viagens/Vietnã 2024 - 2025/slides_dia7.json'
 
 audio_fp = 'narracao.mp3'
 
 out_html_fp = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6/slide_show.html'
+
+sync_videos_fully = True  # may affect performance
 
 with open(slides_fp, 'r') as f:
     fs = f.read()
@@ -131,7 +133,126 @@ middle_lines = '''
     const slides = [
 '''.replace('{audio}', f'{audio_fp}')
 
-final_lines = '''    ];
+if sync_videos_fully:
+    final_lines = '''    ];
+    const presentation = document.getElementById("presentation");
+    const narration = document.getElementById("narration");
+
+    let activeElement = null;
+    let lastTime = -1;
+
+    // Função para carregar dinamicamente os slides
+    function loadSlide(slide) {
+      const element = document.createElement(slide.type === "photo" ? "img" : "video");
+      element.classList.add("media");
+      element.id = `slide-${slide.start}`;
+      element.src = slide.src;
+
+      if (slide.type === "video") {
+        element.muted = slide.muted;
+        element.preload = "auto";
+      }
+
+      presentation.appendChild(element);
+      console.log(`Carregado: ${slide.src}`);
+      return element;
+    }
+
+    // Função para animar os slides
+    function animateSlide(slide, element, progress) {
+      if (slide.type === "photo") {
+        const zoomLevel = slide.zoom[0] + progress * (slide.zoom[1] - slide.zoom[0]);
+        const panX = slide.pan[0].x + progress * (slide.pan[1].x - slide.pan[0].x);
+        const panY = slide.pan[0].y + progress * (slide.pan[1].y - slide.pan[0].y);
+
+        element.style.transform = `scale(${zoomLevel})`;
+        element.style.transformOrigin = `${panX}% ${panY}%`;
+      }
+    }
+
+    // Função principal para controlar os slides
+    function updateSlides(forceSync = true) {
+      const currentTime = narration.currentTime;
+
+      //if (currentTime === lastTime) return; // Evita atualizações desnecessárias
+      //lastTime = currentTime;
+
+      slides.forEach(slide => {
+        const elementId = `slide-${slide.start}`;
+        let element = document.getElementById(elementId);
+
+        if (currentTime >= slide.start && currentTime <= slide.end) {
+          if (!element) {
+            element = loadSlide(slide);
+          }
+
+          // Exibe e anima o slide atual
+          if (activeElement && activeElement !== element) {
+            activeElement.style.opacity = 0;
+            if (activeElement.tagName === "VIDEO") {
+              activeElement.pause();
+            }
+          }
+
+          element.style.opacity = 1;
+          activeElement = element;
+
+          // Dentro do bloco if (slide.type === "video") {
+        if (slide.type === "video") {
+                const videoTime = currentTime - slide.start;
+                if (element.paused || Math.abs(element.currentTime - videoTime) > 0.3) {
+                    element.currentTime = videoTime;
+                }
+                if (!narration.paused) {
+                    element.play();
+                }
+            } else {
+                const progress = (currentTime - slide.start) / (slide.end - slide.start);
+                animateSlide(slide, element, progress);
+            }
+        } else if (element) {
+            element.style.opacity = 0;
+            if (element.tagName === "VIDEO") {
+                element.pause();
+            }
+        }
+    });
+      requestAnimationFrame(updateSlides);
+    }
+
+    // Sincroniza com o áudio
+    //narration.addEventListener("timeupdate", updateSlides);
+
+    // Inicia a animação quando o áudio começar
+    narration.addEventListener("play", () => {
+      //updateSlides();
+      requestAnimationFrame(updateSlides);
+    });
+    
+  
+
+    narration.addEventListener('pause', () => {
+        document.querySelectorAll('video').forEach(video => video.pause());
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+        }
+    });
+
+    narration.addEventListener('seeked', () => { // Novo listener para busca manual
+        updateSlides();
+        if (!narration.paused) {
+            document.querySelectorAll('video').forEach(video => {
+                video.play().catch(() => {});
+            });
+        }
+    });
+  </script>
+</body>
+</html>
+'''
+else:
+    final_lines = '''    ];
 
     const presentation = document.getElementById("presentation");
     const narration = document.getElementById("narration");
