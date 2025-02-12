@@ -27,9 +27,9 @@ from os import path
 # fp2 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20241124/E22A4172.JPG'
 # fp3 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20241124/E22A4173.JPG'
 
-fp1 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6/E22A6163.JPG'
-fp2 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6/E22A6164.JPG'
-fp3 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6/E22A6165.JPG'
+fp1 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6/E22A6750.JPG'
+fp2 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6/E22A6751.JPG'
+fp3 = '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6/E22A6752.JPG'
 
 # Input images (bracketed exposures)
 input_images = [fp1, fp2, fp3]

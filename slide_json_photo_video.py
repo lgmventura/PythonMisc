@@ -24,19 +24,34 @@ vid_formats = ('.mp4')
 
 data = {'folder': ['/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/100EOSR6',
                    '/media/luiz/HDp1/Câmeras/EOSR6mk2/20250112/101EOSR6',
-                   '/media/luiz/HDp1/Celular/MiNote10/20250112'],
+                   '/media/luiz/HDp1/Celular/MiNote10/20250112',
+                   '/media/luiz/HDp1/Câmeras/DJI_mini_4_pro/20250112/cortes',
+                   '/media/luiz/HDp1/Câmeras/DJI_mini_4_pro/20250112/selecionados'],
         'datetime photo': ['exif',
                            'exif',
+                           'file name',
+                           'file name',
                            'file name'],
         'datetime video': ['getmtime',
                            'getmtime',
+                           'file name',
+                           'file name',
                            'file name'],
         'regex datetime': ['datetime',  # in this case, the exif name
                            'datetime',
-                           r'_(\d+_\d+)'], # todo: find better names
-        'offset': [dt.timedelta(hours=7),
+                           r'_(\d+_\d+)',
+                           r'_(\d+)_\d+',
+                           r'_(\d+)_\d+'], # todo: find better names
+        'offset photo': [dt.timedelta(hours=6),
                    dt.timedelta(hours=7),
-                   dt.timedelta(0)]
+                   dt.timedelta(0),
+                   dt.timedelta(hours=-1),
+                   dt.timedelta(hours=-1)],
+        'offset video': [dt.timedelta(hours=5),
+                   dt.timedelta(hours=6),
+                   dt.timedelta(0),
+                   dt.timedelta(hours=-1),
+                   dt.timedelta(hours=-1)]
         }
 
 df = pd.DataFrame(data)
@@ -72,8 +87,11 @@ for idx, folder in enumerate(df['folder']):
                     print(f'Skipping {file}. No regex match found.')
                     continue
                 file_dt_str = file_dt_matches[0]
+                if file_dt_str.isdigit():  # DJI: only digits for datetime
+                    file_dt_str = file_dt_str[:8] + '_' + file_dt_str[8:]
                 file_dt = dt.datetime.fromisoformat(file_dt_str)
             all_categs.append('image')
+            file_dt_with_offset = file_dt + df['offset photo'][idx]
             
         elif file.lower().endswith(vid_formats):
             if dt_video == 'getmtime':
@@ -85,13 +103,15 @@ for idx, folder in enumerate(df['folder']):
                     print(f'Skipping {file}. No regex match found.')
                     continue
                 file_dt_str = file_dt_matches[0]
+                if file_dt_str.isdigit():  # DJI: only digits for datetime
+                    file_dt_str = file_dt_str[:8] + '_' + file_dt_str[8:]
                 file_dt = dt.datetime.fromisoformat(file_dt_str)
             all_categs.append('video')
+            file_dt_with_offset = file_dt + df['offset video'][idx]
         else:
             print(f'Skipping {file} - not a selected format.')
             continue
         
-        file_dt_with_offset = file_dt + df['offset'][idx]
         
         all_files.append(file)
         all_paths.append(folder)
@@ -138,8 +158,8 @@ def get_video_duration(video_path):
         print(f"Erro ao processar o vídeo: {e.stderr}")
         return None
 
-datetime_init = dt.datetime(2024, 12, 17, 3, 0, 0)
-datetime_final = dt.datetime(2024, 12, 18, 3, 0, 0)
+datetime_init = dt.datetime(2024, 12, 22, 3, 0, 0)
+datetime_final = dt.datetime(2024, 12, 23, 3, 0, 0)
 
 df_filt = df_all[(df_all['dt_with_offset'] >= datetime_init) & (df_all['dt_with_offset'] <= datetime_final)]
 
