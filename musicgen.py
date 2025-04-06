@@ -6,10 +6,13 @@ Created on Thu Dec  2 23:33:28 2021
 @author: luiz
 """
 import numpy as np
-from music21 import midi, note, chord, environment
+from music21 import midi, note, chord, environment, tempo
 from midigenlib import populate_midi_track_from_data
 from datetime import datetime as dtm
 from os import path
+
+from fractal_segments import koch, draw_angle_path
+from math_extra import is_prime, divisors
 
 def fib(n):
     a, b = 0, 1
@@ -17,11 +20,10 @@ def fib(n):
         yield a
         a, b = b, a + b
 
-nT = 5
+nT = 3
 mts = []
 for iT in range(nT):
     mts.append(midi.MidiTrack(iT))
-
 
 
 beats_per_measure = 4
@@ -245,14 +247,43 @@ def algorithm7(nums: complex, t0, t1, num_beats):
     data = [] # one start note
     dataCtpt = [] # data counterpoint
     
+# using linear fractal (e.g. Koch)
+def algorithm8(fractal_array_angles):
+    # duration, pitch, velocity
+    data = [] # one start note
+    dataCtpt = [] # data counterpoint
+    for idx, ival in enumerate(fractal_array_angles):
+        ang_rad = ival * np.pi/180
+        # pick random pitch and velocity for 8th note
+        duration = 2*(512 + int(256 * round(np.cos(ang_rad), 1)))
+        pitch = 72 + 12*ival/360
+        pitch = pitch + is_prime(ival)*12
+        pitch = int(pitch)
+        velocity = 80 + np.random.randint(0, 20)
     
+        data.append([duration, pitch, velocity])
+        
+        # new counterpoint tracks
+        for iT in range(nT - 1):
+            jval = fractal_array_angles[max(0, idx - nT*12)]
+            ang_rad_j = jval * np.pi/180
+            
+            durationT = 2*(512 + int(256 * round(np.cos(ang_rad_j), 1)))
+            pitchCtpt = pitch - np.round(len(divisors(abs(ival)*iT)))%24 - iT*12
+            pitchCtpt = int(pitchCtpt)
+            
+            dataCtpt.append([])
+            dataCtpt[iT].append([durationT, pitchCtpt, velocity])
+            
+    return data, dataCtpt
 
 
 # algorithm to use, change here:
-algToUse = algorithm6
+algToUse = algorithm8
 
 # calling algorithm (don't change here, change above)
-data, dataCtpt = algToUse(num_beats, modeList=mode)
+# data, dataCtpt = algToUse(num_beats, modeList=mode)
+data, dataCtpt = algorithm8(koch(3, 50, -68))
 populate_midi_track_from_data(mts[0], data)
 for iT in range(nT - 1):
     populate_midi_track_from_data(mts[iT + 1], dataCtpt[iT])
