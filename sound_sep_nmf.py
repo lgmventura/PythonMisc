@@ -22,14 +22,23 @@ from os import path
 
 # Step 1: Load the known bell sounds and the mixture sound
 # Load bell sound samples (assuming you have three bell samples: bell1.wav, bell2.wav, bell3.wav)
-bell1, sr = librosa.load('/home/luiz/Music/Baixadas/Sinos de São João del Rey/Carmo - sino pequeno.wav', sr=None)
-bell2, sr = librosa.load('/home/luiz/Music/Baixadas/Sinos de São João del Rey/Carmo - sino médio.wav', sr=None)
-bell3, sr = librosa.load('/home/luiz/Music/Baixadas/Sinos de São João del Rey/Carmo - sino grande.wav', sr=None)
+# bell1, sr = librosa.load('/home/luiz/Music/Baixadas/Sinos de São João del Rey/Carmo - sino pequeno.wav', sr=None)
+# bell2, sr = librosa.load('/home/luiz/Music/Baixadas/Sinos de São João del Rey/Carmo - sino médio.wav', sr=None)
+# bell3, sr = librosa.load('/home/luiz/Music/Baixadas/Sinos de São João del Rey/Carmo - sino grande.wav', sr=None)
+
+bell1, sr = librosa.load('/media/luiz/HDp1/Gravações/SF/Sinos_SJDR/Pilar_pequeno_torre_santíssimo_f.wav', sr=None)
+bell2, sr = librosa.load('/media/luiz/HDp1/Gravações/SF/Sinos_SJDR/Pilar_médio_torre_santíssimo.wav', sr=None)
+bell3, sr = librosa.load('/media/luiz/HDp1/Gravações/SF/Sinos_SJDR/Pilar_sino_santíssimo_f.wav', sr=None)
+
 
 # cut
-bell1 = bell1[1100:10000]
-bell2 = bell2[980:10000]
-bell3 = bell3[1600:10000]
+# bell1 = bell1[1100:10000]
+# bell2 = bell2[980:10000]
+# bell3 = bell3[1600:10000]
+
+bell1 = bell1[0:10000]
+bell2 = bell2[0:10000]
+bell3 = bell3[0:10000]
 
 # fade out
 bell1[-600:] = bell1[-600:] * np.linspace(1, 0, 600)
@@ -37,7 +46,9 @@ bell2[-600:] = bell2[-600:] * np.linspace(1, 0, 600)
 bell3[-600:] = bell3[-600:] * np.linspace(1, 0, 600)
 
 # Load the mixture audio file (where bells are superimposed)
-fpath = '/home/luiz/Music/Baixadas/Sinos de São João del Rey/Terentena carmo.wav'
+# fpath = '/home/luiz/Music/Baixadas/Sinos de São João del Rey/Terentena carmo.wav'
+fpath = '/media/luiz/HDp1/Gravações/20250227 - Terentena.wav'
+
 mixture, sr = librosa.load(fpath, sr=None)
 
 # Step 2: Compute the STFT (Short-Time Fourier Transform) for all sounds

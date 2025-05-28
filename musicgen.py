@@ -244,15 +244,20 @@ mode = [0,2,3,5,7,9,11] # minor scale
 def algorithm8(fractal_array_angles):
     # duration, pitch, velocity
     data = [] # one start note
-    for iT in range(nT - 1):
+    for iT in range(nT):
         voice_data = []
-        for idx, ival in enumerate(fractal_array_angles):
-            ang_rad = ival * np.pi/180
+        for idx, iang in enumerate(fractal_array_angles):
+            ang_rad = iang * np.pi/180
+            jang = iang * iT
+            jang_rad = jang * np.pi/180
             # pick random pitch and velocity for 8th note
-            duration = 1 + int(4 * np.cos(ang_rad))/8
-            pitch = 72 + 12*ival/360
-            pitch = pitch + is_prime(ival)*12
+            duration = 1 + int(4 * np.cos(ang_rad * iT))/8
+            pitch = 72 + 12*iang/360 * len(divisors(abs(iang) + iT)) - iT*12
+            pitch = pitch + is_prime(iang)*12
             pitch = int(pitch)
+            if pitch < 20 or pitch > 112:
+                pitch = 0  # will be a rest
+            
             velocity = 80 + np.random.randint(0, 20)
         
             voice_data.append({'duration': duration,
@@ -273,14 +278,33 @@ def algorithm8(fractal_array_angles):
             
     return data
 
-
+# def equalize_durations(data):
+#     voice_durations = np.array([])
+#     for voice in data:
+#         voice_duration = 0
+#         for nt in voice:
+#             voice_duration = voice_duration + nt['duration']
+#             if nt['duration'] <= 0:
+#                 raise(ValueError('Duration must be positive'))
+#         voice_durations = np.append(voice_durations, voice_duration)
+#     total_duration = np.max(voice_durations)
+#     print(total_duration)
+#     print(voice_durations)
+    
+#     return data
+    
 # algorithm to use, change here:
 algToUse = algorithm8
 
 # calling algorithm (don't change here, change above)
 # data = algToUse(num_measures, modeList=mode)
-data = algorithm8(koch(3))
+arr = koch(3, 42, -42)
+arr2 = np.tile(arr, (20, 1))//13
+arr2 = arr2.T.flatten()
+arr2 = arr2[:arr.size]
+arr = arr + arr2
 
+data = algorithm8(arr)
 
 outPath = '/home/luiz/Music/Algoritmos/'
 out_filename = dtm.isoformat(dtm.now()).replace(':', '')[:17]
@@ -288,29 +312,36 @@ out_filename = path.join(outPath, out_filename)
 
 # Create a Part and Measure
 part = stream.Part()
-measure = stream.Measure(number=1)
+part.append(meter.TimeSignature(f"{time_signature[0]}/{time_signature[1]}"))
 
 # Voices
 voices = []
-
+# data = equalize_durations(data)
 for idx_voice, voice_data in enumerate(data):
     notes = []
     for idx_note, note_data in enumerate(voice_data):
-        nt = note.Note(note_data['pitch'],
-                         quarterLength=note_data['duration'],
-                         velocity=note_data['velocity'])
+        if note_data['pitch'] == 0:
+            nt = note.Rest(quarterLength=note_data['duration'])
+        else:
+            nt = note.Note(note_data['pitch'],
+                             quarterLength=note_data['duration'],
+                             velocity=note_data['velocity'])
         notes.append(nt)
     voice = stream.Voice(notes)
     voice.id = f"voice{idx_voice}"
     voices.append(voice)
 
-# Insert BOTH voices at offset 0 in the measure
-for voice in voices:
+# Insert all voices at offset 0 in the measure
+measure = stream.Measure()
+for idx, voice in enumerate(voices):
     measure.insert(0, voice)  # Start at 0.0
 part.append(measure)
 
 # Export MusicXML (works in MuseScore)
-part.write('musicxml', fp=f'{out_filename}.xml')
+try:
+    part.write('musicxml', fp=f'{out_filename}.xml')
+except Exception as err:
+    print(err)
 
 # Export MIDI (flatten to merge voices)
 midi_stream = part.flatten()  # Combine voices into a single track
@@ -334,7 +365,10 @@ with open(out_filename + '_config_used.txt', 'w') as out_txt_file:
                 # __builtins__, my_shelf, and imported modules can not be shelved.
                 #
                 print('ERROR saving: {0}'.format(key))
-    lines = inspect.getsource(algToUse) # getting source code from algorithm being used
+    #lines = inspect.getsource(algToUse) # getting source code from algorithm being used
+    with open(__file__, 'r') as self_file:
+        lines = self_file.read()
+        
     out_txt_file.write('Code from ' + algToUse.__name__ + ':\n')
     out_txt_file.write(lines)
     # out_txt_file.write(algToUse.__name__)
