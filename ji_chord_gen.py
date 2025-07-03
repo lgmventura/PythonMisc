@@ -15,11 +15,11 @@ from os import path
 
 output = 'wav'
 
-dims = np.array([3/2, 4/3])
+dims = np.array([12/11])#, 4/3])
 
 root_note = mus.pitch.Pitch(60)
 
-lattice = [[0, 3],
+lattice = [[0, 3, 5, 8, 9, 14],
            [-2,2]]
 
 notes = []
